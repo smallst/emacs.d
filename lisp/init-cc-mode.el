@@ -31,7 +31,7 @@
   "setup shared by all languages (java/groovy/c++ ...)"
   (setq c-basic-offset 4)
   ;; give me NO newline automatically after electric expressions are entered
-  (setq c-auto-newline nil)
+  (setq c-auto-newline t)
 
   ; @see http://xugx2007.blogspot.com.au/2007/06/benjamin-rutts-emacs-c-development-tips.html
   (setq compilation-window-height 8)
@@ -47,7 +47,6 @@
   (c-toggle-hungry-state 1)
 
   ;; indent
-  (fix-c-indent-offset-according-to-syntax-context 'substatement 0)
   (fix-c-indent-offset-according-to-syntax-context 'func-decl-cont 0))
 
 (defun my-c-mode-setup ()
@@ -98,7 +97,91 @@
       ;; so below code is NOT needed.
       (setq-local eldoc-documentation-function #'ggtags-eldoc-function)
       (eldoc-mode 1))
-    ))
+ (defun myself-cc-mode-hook ()
+  (set (make-local-variable 'my-exec-command)
+       (let ((myfile (file-name-sans-extension buffer-file-name)))
+         (format "%s;echo Press any key to continue;read -n"
+                 myfile)))
+  (set (make-local-variable 'my-gdb-command)
+       (let ((myfile (file-name-sans-extension buffer-file-name)))
+         (format "gdb -i=mi %s"
+                 myfile)))
+  (global-set-key [f9] 'myself-compile)
+  (global-set-key [f8] 'myself-exec)
+  (global-set-key (kbd "S-<f8>") 'myself-gdb))
+(defun myself-c-mode-hook ()
+  (if (file-exists-p "Makefile")
+      (set (make-local-variable 'my-compile-command)
+           "make -k")
+    (set (make-local-variable 'my-compile-command)
+         ;; emulate make's .c.o implicit pattern rule, but with
+         ;; different defaults for the CC, CPPFLAGS, and CFLAGS
+         ;; variables:
+         ;; $(CC) -c -o $@ $(CPPFLAGS) $(CFLAGS) $<
+         (let ((myfile (file-name-nondirectory buffer-file-name)))
+           (format "%s -o %s %s %s" 
+                   (or (getenv "CC") "gcc")
+                   (file-name-sans-extension myfile)
+                   ;; (or (getenv "CPPFLAGS") "-DDEBUG=9")
+                   (or (getenv "CFLAGS") "-Wall -g")
+                   myfile))))
+  ;; (set (make-local-variable 'my-exec-command)
+  ;;      (let ((myfile (file-name-sans-extension buffer-file-name)))
+  ;;        (format "%s;echo Press any key to continue;read -n"
+  ;;                myfile)))
+  )
+(defun myself-c++-mode-hook ()
+  (if (file-exists-p "Makefile")
+      (set (make-local-variable 'my-compile-command)
+           "make -k")
+    (set (make-local-variable 'my-compile-command)
+         (let ((myfile (file-name-nondirectory buffer-file-name)))
+           (format "%s -o %s %s %s"
+                   (or (getenv "CC") "g++")
+                   (file-name-sans-extension myfile)
+                   (or (getenv "CFLAGS") "-Wall -g -std=c++11")
+                   myfile))) )
+  
+  ;; (set (make-local-variable 'my-exec-command)
+  ;;      (let ((myfile (file-name-sans-extension buffer-file-name)))
+  ;;        (format "%s;echo Press any key to continue;read -n"
+  ;;                myfile)))
+  )
+(defun myself-exec ()
+  (interactive)
+  (progn
+    (let* ((buf-name (generate-new-buffer-name "result"))
+           (buf (get-buffer-create buf-name)))
+      (async-shell-command my-exec-command buf)
+      (other-window 1)
+      (let ((proc (get-buffer-process buf)))
+        (if (and proc (null (eq (process-status proc) 'exit)))
+            (set-process-sentinel proc '(lambda (proc event)
+                                          (if (eq (process-status proc) 'exit)
+                                              (with-current-buffer (process-buffer proc) (dying-mode 't)))))
+          (delete-window)))))
+  )
+(defun myself-compile ()
+  (interactive)
+  (save-buffer)
+  (compile my-compile-command))
+(defun myself-gdb ()
+  (interactive)
+  (gdb my-gdb-command))
+
+(add-hook 'c-mode-hook
+          (lambda ()
+            (when (buffer-file-name)
+              
+              ( myself-c-mode-hook)
+              (myself-cc-mode-hook))))
+(add-hook 'c++-mode-hook
+          (lambda ()
+            (when (buffer-file-name)
+              (myself-cc-mode-hook)
+              (myself-c++-mode-hook)
+              )))
+   ))
 (add-hook 'c-mode-common-hook 'c-mode-common-hook-setup)
 
 (provide 'init-cc-mode)

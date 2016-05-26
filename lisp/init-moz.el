@@ -11,17 +11,54 @@
       (setq cmd (concat "if(" js-cond "){setTimeout(function(){content.document.location.reload(true);}, '500');}")))
      (t
       (setq cmd "setTimeout(function(){content.document.location.reload(true);}, '500');")))
-    (comint-send-string (inferior-moz-process) cmd)))
+    (comint-send-string (inferior-moz-process) (concat "repl.switch_tab(refreshtab);" cmd))))
+;; added by me 
+(defun moz-controller-repl-filter (proc string)
+  "Filter function of *MozRepl*.
+It gets the useful output of *MozRepl*, store it in `moz-controller-repl-output` and `kill-ring`"
+  (when (buffer-live-p (process-buffer proc))
+    (unless (string= string "repl> ") ; ignore empty output (page up, page down, etc)
+      (setq moz-controller-repl-output 
+            (replace-regexp-in-string "\\(.+\\)\n\nrepl> " "\\1" string))
+                                        ;(kill-new moz-controller-repl-output) ; append to kill-ring
+                                        ;(message moz-controller-repl-output) ; show the copied content in echo area
+                                        )
+    
+    ;; (with-current-buffer (process-buffer proc)
+    ;;   (let ((moving (= (point) (process-mark proc))))
+    ;;     (save-excursion
+    ;;       ;; Insert the text, advancing the process marker.
+    ;;       (goto-char (process-mark proc))
+    ;;       (insert string)
+    ;;       (set-marker (process-mark proc) (point)))
+    ;;     (if moving (goto-char (process-mark proc)))))
+    ))
 
-(defvar moz-reload-browser-when-save nil
+
+(defvar moz-reload-browser-when-save t 
   "Reload the browser when save")
 
 (defun moz-after-save ()
   (interactive)
-  (if (memq major-mode '(web-mode html-mode nxml-mode nxhml-mode php-mode))
+  (if (memq major-mode '(web-mode html-mode nxml-mode nxhml-mode php-mode css-mode js2-mode))
       (if moz-reload-browser-when-save
           (moz-reload-browser))))
 ;; }}
+(defun my-ivy-list (retstring)
+  "firefox pages"
+  (interactive)
+  (let (collection)
+    (unless recentf-mode (recentf-mode 1))
+    (setq collection (split-string retstring "\n" t))
+    (ivy-read "pages:" collection :action (lambda (x) 
+                                        (comint-send-string (inferior-moz-process) (concat "refreshtab=repl.tabs[" (number-to-string (cl-position x (split-string retstring "\n" t) :test 'equal)) "];"))))))
+(defun my-moz-setup ()
+  (interactive)
+  (comint-send-string (inferior-moz-process) "var refreshtab;")
+  (set-process-filter (get-buffer-process "*MozRepl*") 'moz-controller-repl-filter)
+  (comint-send-string (inferior-moz-process) "repl.show_tab();")
+  (sleep-for 0.1)
+  (my-ivy-list moz-controller-repl-output))
 
 (defun moz-custom-setup ()
   ;; called when editing a REAL file

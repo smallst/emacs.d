@@ -436,6 +436,7 @@ If the character before and after CH is space or tab, CH is NOT slash"
        "cxi" 'org-clock-in ; `C-c C-x C-i'
        "cxo" 'org-clock-out ; `C-c C-x C-o'
        "cxr" 'org-clock-report ; `C-c C-x C-r'
+       "cap" 'org-capture
        "qq" 'my-grep
        "xc" 'save-buffers-kill-terminal
        "rr" 'counsel-recentf-goto

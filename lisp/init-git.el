@@ -163,11 +163,9 @@
           (lambda (msg)
             ;; extract commit id and put into the kill ring
             (when (string-match "\\(commit *: *\\)\\([0-9a-z]+\\)" msg)
-              ;; get the first 7 characters as hash because that's `git log' use
-              (let ((hash (substring-no-properties (match-string 2 msg) 0 7)))
-                (copy-yank-str hash)
-                (message "commit hash %s => clipboard & kill-ring" hash)
-                ))))
+              (copy-yank-str (match-string 2 msg))
+              (message "commit hash %s => clipboard & kill-ring" (match-string 2 msg))
+              )))
 (global-set-key (kbd "C-x v p") 'git-messenger:popup-message)
 ;; }}
 

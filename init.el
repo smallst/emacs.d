@@ -80,6 +80,7 @@
   (require 'init-javascript)
   (require 'init-org)
   (require 'init-org-mime)
+  (require 'init-org-protocol)
   (require 'init-css)
   (require 'init-python-mode)
   (require 'init-haskell)
@@ -90,6 +91,7 @@
   ;; Use bookmark instead
   (require 'init-zencoding-mode)
   (require 'init-cc-mode)
+  (require 'init-csharp-mode)
   (require 'init-gud)
   (require 'init-linum-mode)
   ;; (require 'init-gist)
@@ -120,9 +122,10 @@
 
   ;; comment below line if you want to setup color theme in your own way
   (if (or (display-graphic-p) (string-match-p "256color"(getenv "TERM"))) (require 'init-color-theme))
-
   (require 'init-emacs-w3m)
   (require 'init-hydra)
+  (require 'init-dying-mode)
+  (require 'init-octave-mode)
 
   ;; {{ idle require other stuff
   (setq idle-require-idle-delay 3)
