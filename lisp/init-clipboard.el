@@ -2,7 +2,7 @@
 (setq x-select-enable-clipboard t
       x-select-enable-primary t)
 
-;; kill-ring and clipboard are same. It's annoying!
+;; kill-ring and clipboard are same? No, it's annoying!
 ;; (setq save-interprogram-paste-before-kill t)
 
 (autoload 'simpleclip-get-contents "simpleclip" "" t)
@@ -15,7 +15,7 @@
   (simpleclip-set-contents msg))
 
 (defun cp-filename-of-current-buffer ()
-  "copy file name (NOT full path) into the yank ring and OS clipboard"
+  "Copy file name (NOT full path) into the yank ring and OS clipboard"
   (interactive)
   (let (filename)
     (when buffer-file-name
@@ -24,7 +24,7 @@
       (message "filename %s => clipboard & yank ring" filename))))
 
 (defun cp-filename-line-number-of-current-buffer ()
-  "copy file:line into the yank ring and clipboard"
+  "Copy file:line into the yank ring and clipboard"
   (interactive)
   (let (filename linenum rlt)
     (when buffer-file-name
@@ -39,39 +39,59 @@
       (message "%s => clipboard & yank ring" rlt))))
 
 (defun cp-fullpath-of-current-buffer ()
-  "copy full path into the yank ring and OS clipboard"
+  "Copy full path into the yank ring and OS clipboard"
   (interactive)
   (when buffer-file-name
     (copy-yank-str (file-truename buffer-file-name))
     (message "file full path => clipboard & yank ring")))
 
-(defun copy-to-x-clipboard ()
-  (interactive)
+(defun copy-to-x-clipboard (&optional num)
+  "If NUM equals 1, copy the downcased string.
+If NUM equals 2, copy the captalized string.
+If NUM equals 3, copy the upcased string.
+If NUM equals 4, kill-ring => clipboard."
+  (interactive "P")
   (let ((thing (if (region-active-p)
                    (buffer-substring-no-properties (region-beginning) (region-end))
                  (thing-at-point 'symbol))))
+    (cond
+     ((not num))
+     ((= num 1)
+      (setq thing (downcase thing)))
+     ((= num 2)
+      (setq thing (capitalize thing)))
+     ((= num 3)
+      (setq thing (upcase thing)))
+     ((= num 4)
+      (simpleclip-set-contents (car kill-ring)))
+     (t
+      (message "C-h f copy-to-x-clipboard to find right usage")))
+
     (simpleclip-set-contents thing)
-    (message "thing => clipboard!")))
+    (if (not (and num (= 4 num))) (message "kill-ring => clipboard")
+      (message "thing => clipboard!"))))
 
-(defun paste-from-x-clipboard()
-  "Paste string clipboard"
-  (interactive)
-  (insert (simpleclip-get-contents)))
-
-(defun my/paste-in-minibuffer ()
-  (local-set-key (kbd "M-y") 'paste-from-x-clipboard))
-(add-hook 'minibuffer-setup-hook 'my/paste-in-minibuffer)
-
-(defun paste-from-clipboard-and-cc-kill-ring ()
-  "paste from clipboard and cc the content into kill ring"
-  (interactive)
+(defun paste-from-x-clipboard(&optional n)
+  "Paste string clipboard.
+If N is 1, we paste diff hunk whose leading char should be removed.
+If N is 2, paste into kill-ring too"
+  (interactive "P")
+  ;; paste after the cursor in evil normal state
+  (when (and (functionp 'evil-normal-state-p)
+             (functionp 'evil-move-cursor-back)
+             (evil-normal-state-p)
+             (not (eolp))
+             (not (eobp)))
+    (forward-char))
   (let ((str (simpleclip-get-contents)))
-    (insert str)
-    ;; cc the content into kill ring at the same time
-    (kill-new str)))
-
-(defun latest-kill-to-clipboard ()
-  (interactive)
-  (copy-yank-str (current-kill 1) t))
+    (cond
+     ((not n)
+      ;; do nothing
+      )
+     ((= 1 n)
+      (setq str (replace-regexp-in-string "^\\(+\\|-\\)" "" str)))
+     ((= 2 n)
+      (kill-new str)))
+    (insert str)))
 
 (provide 'init-clipboard)

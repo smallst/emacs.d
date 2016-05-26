@@ -1,83 +1,14 @@
 (require 'package)
 
-;;------------------------------------------------------------------------------
-;; Patch up annoying package.el quirks
-;;------------------------------------------------------------------------------
-(defadvice package-generate-autoloads (after close-autoloads (name pkg-dir) activate)
-  "Stop package.el from leaving open autoload files lying around."
-  (let ((path (expand-file-name (concat
-                                 ;; name is string when emacs <= 24.3.1,
-                                 (if (symbolp name) (symbol-name name) name)
-                                 "-autoloads.el") pkg-dir)))
-    (with-current-buffer (find-file-existing path)
-      (kill-buffer nil))))
-
-
-;;------------------------------------------------------------------------------
-;; Add support to package.el for pre-filtering available packages
-;;------------------------------------------------------------------------------
-(defvar package-filter-function nil
-  "Optional predicate function used to internally filter packages used by package.el.
-
-The function is called with the arguments PACKAGE VERSION ARCHIVE, where
-PACKAGE is a symbol, VERSION is a vector as produced by `version-to-list', and
-ARCHIVE is the string name of the package archive.")
-
-(defadvice package--add-to-archive-contents
-  (around filter-packages (package archive) activate)
-  "Add filtering of available packages using `package-filter-function', if non-nil."
-  (when (or (null package-filter-function)
-      (funcall package-filter-function
-         (car package)
-         (funcall (if (fboundp 'package-desc-version)
-          'package--ac-desc-version
-        'package-desc-vers)
-            (cdr package))
-         archive))
-    ad-do-it))
-
-;;------------------------------------------------------------------------------
-;; On-demand installation of packages
-;;------------------------------------------------------------------------------
-(defun require-package (package &optional min-version no-refresh)
-  "Ask elpa to install given PACKAGE."
-  (if (package-installed-p package min-version)
-      t
-    (if (or (assoc package package-archive-contents) no-refresh)
-        (package-install package)
-      (progn
-        (package-refresh-contents)
-        (require-package package min-version t)))))
-
-
-;;------------------------------------------------------------------------------
-;; Standard package repositories
-;;------------------------------------------------------------------------------
-
-;; We include the org repository for completeness, but don't use it.
-;; Lock org-mode temporarily:
-;; (add-to-list 'package-archives '("org" . "http://orgmode.org/elpa/"))
-
-(setq package-archives '(("melpa" . "http://melpa.org/packages/")
-                         ("melpa-stable" . "http://stable.melpa.org/packages/")
-                         ;; uncomment below line if you need use GNU ELPA
-                         ;; ("gnu" . "http://elpa.gnu.org/packages/")
-                         ))
-
-;; Un-comment below line if you download zip file
-;; from https://github.com/redguardtoo/myelpa/archive/master.zip
-;; and extract its content into ~/myelpa/
-;; (setq package-archives '(("myelpa" . "~/projs/myelpa")))
-
-;; Or Un-comment below line if you prefer installing package from https://github.com/redguardtoo/myelpa/ directly
-;; (setq package-archives '(("myelpa" . "https://raw.github.com/redguardtoo/myelpa/master/")))
+;; You can set it to `t' to use safer HTTPS to download packages
+(defvar melpa-use-https-repo nil
+  "By default, HTTP is used to download packages.
+But you may use safer HTTPS instead.")
 
 ;; List of VISIBLE packages from melpa-unstable (http://melpa.org)
 ;; Feel free to add more packages!
 (defvar melpa-include-packages
   '(bbdb
-    json-rpc
-    kv
     color-theme
     wgrep
     robe
@@ -89,18 +20,15 @@ ARCHIVE is the string name of the package archive.")
     string-edit ; looks magnars don't update stable tag frequently
     findr
     mwe-log-commands
-    dired-details
     yaml-mode
     noflet
     db
     creole
     web
-    sass-mode
     idomenu
     pointback
     buffer-move
     regex-tool
-    csharp-mode
     quack
     legalese
     htmlize
@@ -114,18 +42,15 @@ ARCHIVE is the string name of the package archive.")
     inflections
     dropdown-list
     lua-mode
+    tidy
     pomodoro
-    helm
     auto-compile
     packed
     gitconfig-mode
     textile-mode
     w3m
-    fakir
     erlang
     company-c-headers
-    company-anaconda
-    anaconda-mode
     ;; make all the color theme packages available
     afternoon-theme
     define-word
@@ -139,6 +64,7 @@ ARCHIVE is the string name of the package archive.")
     base16-theme
     basic-theme
     birds-of-paradise-plus-theme
+    workgroups2
     bliss-theme
     boron-theme
     bubbleberry-theme
@@ -175,10 +101,80 @@ ARCHIVE is the string name of the package archive.")
     gruber-darker-theme
     gruvbox-theme
     hc-zenburn-theme
-    helm-themes
     hemisu-theme
     heroku-theme)
   "Don't install any Melpa packages except these packages")
+
+;; We include the org repository for completeness, but don't use it.
+;; Lock org-mode temporarily:
+;; (add-to-list 'package-archives '("org" . "http://orgmode.org/elpa/"))
+(if melpa-use-https-repo
+    (setq package-archives
+          '(;; uncomment below line if you need use GNU ELPA
+            ;; ("gnu" . "https://elpa.gnu.org/packages/")
+            ("melpa" . "https://melpa.org/packages/")
+            ("melpa-stable" . "https://stable.melpa.org/packages/")))
+  (setq package-archives
+        '(;; uncomment below line if you need use GNU ELPA
+          ;; ("gnu" . "http://elpa.gnu.org/packages/")
+          ("melpa" . "http://melpa.org/packages/")
+          ("melpa-stable" . "http://stable.melpa.org/packages/")))
+  )
+
+
+;; Un-comment below line if your extract https://github.com/redguardtoo/myelpa/archive/master.zip into ~/myelpa/
+;; (setq package-archives '(("myelpa" . "~/myelpa")))
+
+;; Or Un-comment below line if you install package from https://github.com/redguardtoo/myelpa/
+;; (setq package-archives '(("myelpa" . "https://raw.github.com/redguardtoo/myelpa/master/")))
+
+
+
+;;------------------------------------------------------------------------------
+;; Internal implementation, newbies should NOT touch code below this line!
+;;------------------------------------------------------------------------------
+
+;; Patch up annoying package.el quirks
+(defadvice package-generate-autoloads (after close-autoloads (name pkg-dir) activate)
+  "Stop package.el from leaving open autoload files lying around."
+  (let ((path (expand-file-name (concat
+                                 ;; name is string when emacs <= 24.3.1,
+                                 (if (symbolp name) (symbol-name name) name)
+                                 "-autoloads.el") pkg-dir)))
+    (with-current-buffer (find-file-existing path)
+      (kill-buffer nil))))
+
+;; Add support to package.el for pre-filtering available packages
+(defvar package-filter-function nil
+  "Optional predicate function used to internally filter packages used by package.el.
+
+The function is called with the arguments PACKAGE VERSION ARCHIVE, where
+PACKAGE is a symbol, VERSION is a vector as produced by `version-to-list', and
+ARCHIVE is the string name of the package archive.")
+
+(defadvice package--add-to-archive-contents
+  (around filter-packages (package archive) activate)
+  "Add filtering of available packages using `package-filter-function', if non-nil."
+  (when (or (null package-filter-function)
+      (funcall package-filter-function
+         (car package)
+         (funcall (if (fboundp 'package-desc-version)
+          'package--ac-desc-version
+        'package-desc-vers)
+            (cdr package))
+         archive))
+    ad-do-it))
+
+;; On-demand installation of packages
+(defun require-package (package &optional min-version no-refresh)
+  "Ask elpa to install given PACKAGE."
+  (if (package-installed-p package min-version)
+      t
+    (if (or (assoc package package-archive-contents) no-refresh)
+        (package-install package)
+      (progn
+        (package-refresh-contents)
+        (require-package package min-version t)))))
 
 ;; Don't take Melpa versions of certain packages
 (setq package-filter-function
@@ -198,8 +194,7 @@ ARCHIVE is the string name of the package archive.")
 
 (package-initialize)
 
-(require-package 'kv)
-(require-package 'dash)
+(require-package 'dash) ; required by string-edit
 ; color-theme 6.6.1 in elpa is buggy
 (require-package 'color-theme)
 (require-package 'auto-compile)
@@ -211,17 +206,19 @@ ARCHIVE is the string name of the package archive.")
 (require-package 'gitconfig-mode)
 (require-package 'yagist)
 (require-package 'wgrep)
+(require-package 'request) ; http post/get tool
 (require-package 'lua-mode)
 (require-package 'robe)
 (require-package 'inf-ruby)
+(require-package 'workgroups2)
 (require-package 'yaml-mode)
 (require-package 'paredit)
 (require-package 'erlang)
 (require-package 'findr)
 (require-package 'jump)
+(require-package 'nvm)
 (require-package 'writeroom-mode)
 (require-package 'haml-mode)
-(require-package 'sass-mode)
 (require-package 'scss-mode)
 (require-package 'markdown-mode)
 (require-package 'dired+)
@@ -241,9 +238,10 @@ ARCHIVE is the string name of the package archive.")
 (require-package 'exec-path-from-shell)
 (require-package 'flymake-css)
 (require-package 'flymake-jslint)
-(require-package 'flymake-python-pyflakes)
 (require-package 'flymake-ruby)
-(require-package 'flymake-sass)
+(require-package 'swiper)
+(require-package 'find-file-in-project)
+(require-package 'elpy)
 (require-package 'hl-sexp)
 (require-package 'ibuffer-vc)
 (require-package 'less-css-mode)
@@ -255,10 +253,9 @@ ARCHIVE is the string name of the package archive.")
 (require-package 'rinari)
 (require-package 'groovy-mode)
 (require-package 'ruby-compilation)
-(require-package 'csharp-mode)
 (require-package 'emmet-mode)
 (require-package 'session)
-;; (require-package 'tidy)
+(require-package 'tidy)
 (require-package 'unfill)
 (require-package 'w3m)
 (require-package 'idomenu)
@@ -277,7 +274,6 @@ ARCHIVE is the string name of the package archive.")
 ;; C-x r l to list bookmarks
 (require-package 'bookmark+)
 (require-package 'multi-term)
-(require-package 'json-mode)
 (require-package 'js2-mode)
 (require-package 's)
 ;; js2-refactor requires js2, dash, s, multiple-cursors, yasnippet
@@ -290,10 +286,6 @@ ARCHIVE is the string name of the package archive.")
 (require-package 'company)
 (require-package 'company-c-headers)
 (require-package 'legalese)
-(require-package 'string-edit)
-(require-package 'dired-details)
-(require-package 'guide-key)
-(require-package 'fakir)
 (require-package 'simple-httpd)
 (require-package 'git-messenger)
 (require-package 'git-gutter)
@@ -301,10 +293,6 @@ ARCHIVE is the string name of the package archive.")
 (require-package 'neotree)
 (require-package 'define-word)
 (require-package 'quack) ;; for scheme
-(require-package 'anaconda-mode)
-(require-package 'company-anaconda)
-
-
-;; (require-package 'command-frequency)
+(require-package 'hydra)
 
 (provide 'init-elpa)
