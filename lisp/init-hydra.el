@@ -23,7 +23,7 @@
   ("dd" my-lookup-dict-org "Lookup dict.org")
   ("dw" define-word "Lookup word")
   ("dp" define-word-at-point "Lookup on spot")
-  ("q" nil "Bye")
+  ("q" nil "Bye"))
 ;; Because in message-mode/article-mode we've already use `y' as hotkey
 (global-set-key (kbd "C-c C-y") 'hydra-launcher/body)
 
@@ -106,7 +106,7 @@
        "?"
        ("sa" (shell-command "periscope.py -l en *.mkv *.mp4 *.avi &") "All subtitles")
        ("s1" (shell-command (format "periscope.py -l en %s &"
-                                    (dired-file-name-at-point))) "subtitle")
+                                    (dired-file-name-at-point))) "1 subtitle")
        ("cf" (let ((f (dired-file-name-at-point)))
                 (copy-yank-str f)
                 (message "filename %s => clipboard & yank ring" f)) "Copy filename")
