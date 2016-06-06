@@ -36,6 +36,9 @@
 (defun evil-surround-emacs-lisp-mode-hook-setup ()
   (push '(?` . ("`" . "'")) evil-surround-pairs-alist))
 (add-hook 'emacs-lisp-mode-hook 'evil-surround-emacs-lisp-mode-hook-setup)
+(defun evil-surround-org-mode-hook-setup ()
+  (push '(?= . ("=" . "=")) evil-surround-pairs-alist))
+(add-hook 'org-mode-hook 'evil-surround-org-mode-hook-setup)
 ;; }}
 
 ;; {{ For example, press `viW*`
@@ -43,6 +46,17 @@
 (setq evil-visualstar/persistent t)
 (global-evil-visualstar-mode t)
 ;; }}
+
+
+;; ffip-diff-mode evil setup
+(defun ffip-diff-mode-hook-setup ()
+    (evil-local-set-key 'normal "p" 'diff-hunk-prev)
+    (evil-local-set-key 'normal "n" 'diff-hunk-next)
+    (evil-local-set-key 'normal "P" 'diff-file-prev)
+    (evil-local-set-key 'normal "N" 'diff-file-next)
+    (evil-local-set-key 'normal (kbd "RET") 'ffip-diff-find-file)
+    (evil-local-set-key 'normal "o" 'ffip-diff-find-file))
+(add-hook 'ffip-diff-mode-hook 'ffip-diff-mode-hook-setup)
 
 ;; {{ https://github.com/gabesoft/evil-mc
 ;; `grm' create cursor for all matching selected
@@ -72,6 +86,8 @@
 
 ;; between dollar signs:
 (define-and-bind-text-object "$" "\\$" "\\$")
+;; between equal signs
+(define-and-bind-text-object "=" "=" "=")
 ;; between pipe characters:
 (define-and-bind-text-object "|" "|" "|")
 ;; trimmed line
@@ -384,7 +400,7 @@ If the character before and after CH is space or tab, CH is NOT slash"
        "epl" 'emmet-expand-line
        "rd" 'evilmr-replace-in-defun
        "rb" 'evilmr-replace-in-buffer
-       "tt" 'evilmr-tag-selected-region ;; recommended
+       "ts" 'evilmr-tag-selected-region ;; recommended
        "rt" 'evilmr-replace-in-tagged-region ;; recommended
        "tua" 'artbollocks-mode
        "cby" 'cb-switch-between-controller-and-view
@@ -400,7 +416,7 @@ If the character before and after CH is space or tab, CH is NOT slash"
        "gg" 'counsel-git-grep ; quickest grep should be easy to press
        "ga" 'counsel-git-grep-by-author
        "gm" 'counsel-git-find-my-file
-       "gs" 'counsel-git-show-commit
+       "gs" 'ffip-show-diff ; find-file-in-project 5.0+
        "sf" 'counsel-git-show-file
        "df" 'counsel-git-diff-file
        "rjs" 'run-js
@@ -421,7 +437,7 @@ If the character before and after CH is space or tab, CH is NOT slash"
        "." 'evil-ex
        ;; @see https://github.com/pidu/git-timemachine
        ;; p: previous; n: next; w:hash; W:complete hash; g:nth version; q:quit
-       "tmt" 'git-timemachine-toggle
+       "tt" 'my-git-timemachine
        "tdb" 'tidy-buffer
        "tdl" 'tidy-current-line
        ;; toggle overview,  @see http://emacs.wordpress.com/2007/01/16/quick-and-dirty-code-folding/
