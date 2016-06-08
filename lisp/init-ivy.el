@@ -21,6 +21,7 @@ Yank the file name at the same time.  FILTER is function to filter the collectio
                         (buffer-substring-no-properties (region-beginning) (region-end))
                       (read-string (concat "Enter " hint " pattern:" ))))))
 
+    ;; (message "git-cmd=%s keyword=%s" (if no-keyword git-cmd (format git-cmd keyword)) keyword)
     (setq collection (split-string (shell-command-to-string (if no-keyword
                                                                 git-cmd
                                                               (format git-cmd keyword)))
@@ -126,8 +127,14 @@ If OPEN-ANOTHER-WINDOW is not nil, results are displayed in new window."
                                   open-another-window)))
 
 (defun counsel-escape (keyword)
+  (setq keyword (replace-regexp-in-string "\"" "\\\\\"" keyword))
+  (setq keyword (replace-regexp-in-string "\\?" "\\\\\?" keyword))
   (setq keyword (replace-regexp-in-string "\\$" "\\\\\$" keyword))
-  (replace-regexp-in-string "\"" "\\\\\"" keyword))
+  (setq keyword (replace-regexp-in-string "\\*" "\\\\\*" keyword))
+  (setq keyword (replace-regexp-in-string "\\." "\\\\\." keyword))
+  (setq keyword (replace-regexp-in-string "\\[" "\\\\\[" keyword))
+  (setq keyword (replace-regexp-in-string "\\]" "\\\\\]" keyword))
+  keyword)
 
 (defun counsel-replace-current-line (leading-spaces content)
   (beginning-of-line)
