@@ -102,7 +102,11 @@ But you may use safer HTTPS instead.")
     gruvbox-theme
     hc-zenburn-theme
     hemisu-theme
-    heroku-theme)
+    heroku-theme
+    ox-reveal
+    org
+    )
+  
   "Don't install any Melpa packages except these packages")
 
 ;; We include the org repository for completeness, but don't use it.
