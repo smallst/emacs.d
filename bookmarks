@@ -1,0 +1,17 @@
+;;;; Emacs Bookmark Format Version 1 ;;;;
+;;; This format is meant to be slightly human-readable;
+;;; nevertheless, you probably don't want to edit it.
+;;; -*- End Of Bookmark File Format Version Stamp -*-
+(#1=(#("org-capture-last-stored" 0 23
+      (bmkp-full-record #1#))
+    (filename . "~/org/gtd.org")
+    (buffer-name . "gtd.org")
+    (front-context-string . "** TODO record 生")
+    (rear-context-string . "5-12 Thu 02:26]\n")
+    (front-context-region-string)
+    (rear-context-region-string)
+    (visits . 0)
+    (time . #2=(22371 14563 842765 580000))
+    (created . #2#)
+    (position . 13346))
+)
