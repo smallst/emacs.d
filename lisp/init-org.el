@@ -2,7 +2,6 @@
 ;; @see http://emacs.stackexchange.com/questions/13820/inline-verbatim-and-code-with-quotes-in-org-mode
 
 ;; {{ NO spell check for embedded snippets
-(add-to-list 'package-archives '("org" . "http://orgmode.org/elpa/") t)
 (defun org-mode-is-code-snippet ()
   (let (rlt
         (begin-regexp "^[ \t]*#\\+begin_\\(src\\|html\\|latex\\)")

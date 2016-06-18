@@ -105,6 +105,7 @@ But you may use safer HTTPS instead.")
     heroku-theme
     ox-reveal
     org
+    org-pomodoro
     )
   
   "Don't install any Melpa packages except these packages")
@@ -116,14 +117,21 @@ But you may use safer HTTPS instead.")
     (setq package-archives
           '(;; uncomment below line if you need use GNU ELPA
             ;; ("gnu" . "https://elpa.gnu.org/packages/")
-            ("melpa" . "https://melpa.org/packages/")
-            ("melpa-stable" . "https://stable.melpa.org/packages/")))
+                                        ;("melpa" . "https://melpa.org/packages/")
+                                        ;("melpa-stable" . "https://stable.melpa.org/packages/")
+            ("melpa" .        "https://mirrors.tuna.tsinghua.edu.cn/elpa/melpa/")
+            ("melpa-stable" . "https://mirrors.tuna.tsinghua.edu.cn/elpa/melpa-stable/")
+            ( "org" .         "https://mirrors.tuna.tsinghua.edu.cn/elpa/org/")
+            ))
   (setq package-archives
         '(;; uncomment below line if you need use GNU ELPA
           ;; ("gnu" . "http://elpa.gnu.org/packages/")
-          ("melpa" . "http://melpa.org/packages/")
-          ("melpa-stable" . "http://stable.melpa.org/packages/")))
-  )
+                                        ;("melpa" . "http://melpa.org/packages/")
+                                        ;("melpa-stable" . "http://stable.melpa.org/packages/")
+          ("melpa" . "http://mirrors.tuna.tsinghua.edu.cn/elpa/melpa/")
+          ("melpa-stable" . "http://mirrors.tuna.tsinghua.edu.cn/elpa/melpa-stable/")
+          ( "org" . "http://mirrors.tuna.tsinghua.edu.cn/elpa/org/")
+          )))
 
 
 ;; Un-comment below line if your extract https://github.com/redguardtoo/myelpa/archive/master.zip into ~/myelpa/
@@ -157,16 +165,16 @@ PACKAGE is a symbol, VERSION is a vector as produced by `version-to-list', and
 ARCHIVE is the string name of the package archive.")
 
 (defadvice package--add-to-archive-contents
-  (around filter-packages (package archive) activate)
+    (around filter-packages (package archive) activate)
   "Add filtering of available packages using `package-filter-function', if non-nil."
   (when (or (null package-filter-function)
-      (funcall package-filter-function
-         (car package)
-         (funcall (if (fboundp 'package-desc-version)
-          'package--ac-desc-version
-        'package-desc-vers)
-            (cdr package))
-         archive))
+            (funcall package-filter-function
+                     (car package)
+                     (funcall (if (fboundp 'package-desc-version)
+                                  'package--ac-desc-version
+                                'package-desc-vers)
+                              (cdr package))
+                     archive))
     ad-do-it))
 
 ;; On-demand installation of packages
@@ -199,7 +207,7 @@ ARCHIVE is the string name of the package archive.")
 (package-initialize)
 
 (require-package 'dash) ; required by string-edit
-; color-theme 6.6.1 in elpa is buggy
+                                        ; color-theme 6.6.1 in elpa is buggy
 (require-package 'color-theme)
 (require-package 'auto-compile)
 (require-package 'avy)
