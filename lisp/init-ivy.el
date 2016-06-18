@@ -48,7 +48,7 @@ Yank the file name at the same time.  FILTER is function to filter the collectio
 
     (when (and collection (> (length collection) 0))
       (setq val (if (= 1 (length collection)) (car collection)
-                    (ivy-read (if no-keyword hint (format "matching \"%s\":" keyword)) collection)))
+                    (ivy-completing-read (if no-keyword hint (format "matching \"%s\":" keyword)) collection)))
       (funcall fn open-another-window val))))
 
 (defun counsel--open-grepped-file (open-another-window val)
@@ -167,7 +167,7 @@ If OPEN-ANOTHER-WINDOW is not nil, results are displayed in new window."
        ((= 1 (length collection))
         (counsel-replace-current-line leading-spaces (car collection)))
        ((> (length collection) 1)
-        (ivy-read "lines:"
+        (ivy-completing-read "lines:"
                   collection
                   :action (lambda (l)
                             (counsel-replace-current-line leading-spaces l))))))))
@@ -234,7 +234,7 @@ Or else, find files since 24 weeks (6 months) ago."
     (require 'imenu nil t))
   (let* ((imenu-auto-rescan t)
          (items (imenu--make-index-alist t)))
-    (ivy-read "imenu items:"
+    (ivy-completing-read "imenu items:"
               (ivy-imenu-get-candidates-from (delete (assoc "*Rescan*" items) items))
               :action (lambda (k) (imenu k)))))
 
@@ -262,7 +262,7 @@ Or else, find files since 24 weeks (6 months) ago."
                                            (cons key bookmark)))
                                        bookmarks))))
     ;; do the real thing
-    (ivy-read "bookmarks:"
+    (ivy-completing-read "bookmarks:"
               collection
               :action (lambda (bookmark)
                         (unless (featurep 'bookmark+)
@@ -312,7 +312,7 @@ Or else, find files since 24 weeks (6 months) ago."
          val)
     (when (and collection (> (length collection) 0)
                (setq val (if (= 1 (length collection)) (car collection)
-                           (ivy-read (format "Bash history:") collection))))
+                           (ivy-completing-read (format "Bash history:") collection))))
       (kill-new val)
       (message "%s => kill-ring" val))))
 
@@ -336,7 +336,7 @@ Or else, find files since 24 weeks (6 months) ago."
                               ;; fasd history
                               (if (executable-find "fasd")
                                   (split-string (shell-command-to-string "fasd -ld") "\n" t))))))
-    (ivy-read "directories:" collection :action 'dired)))
+    (ivy-completing-read "directories:" collection :action 'dired)))
 
 
 ;; {{ grep/ag
@@ -364,7 +364,7 @@ If ag (the_silver_searcher) exists, use ag."
                       "\n"
                       t)))
 
-    (ivy-read (format "matching \"%s\" at %s:" keyword default-directory)
+    (ivy-completing-read (format "matching \"%s\" at %s:" keyword default-directory)
               collection
               :action (lambda (val)
                         (funcall 'counsel--open-grepped-file open-another-window val)))))

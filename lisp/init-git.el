@@ -73,7 +73,7 @@
                     ;; re-shape list for the ivy-read
                     (cons (concat (substring (nth 0 rev) 0 7) "|" (nth 5 rev) "|" (nth 6 rev)) rev))
                   (git-timemachine--revisions)))
-    (ivy-read "commits:"
+    (ivy-completing-read "commits:"
               collection
               :action (lambda (rev)
                         (git-timemachine-show-revision rev)))))

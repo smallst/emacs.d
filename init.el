@@ -90,7 +90,6 @@
   ;; Use bookmark instead
   (require 'init-zencoding-mode)
   (require 'init-cc-mode)
-  (require 'init-csharp-mode)
   (require 'init-gud)
   (require 'init-linum-mode)
   ;; (require 'init-gist)
