@@ -125,6 +125,8 @@
   (require 'init-hydra)
   (require 'init-dying-mode)
   (require 'init-octave-mode)
+  (require 'init-php-mode)
+  (require 'init-org2jekyll)
 
   ;; {{ idle require other stuff
   (setq idle-require-idle-delay 3)
@@ -164,6 +166,7 @@
  ;; If there is more than one, they won't work right.
  '(bmkp-last-as-first-bookmark-file "~/.emacs.d/bookmarks")
  '(git-gutter:handled-backends (quote (svn hg git)))
+ '(puml-plantuml-jar-path "/home/smallst/.custom/plantuml.jar")
  '(safe-local-variable-values (quote ((lentic-init . lentic-orgel-org-init))))
  '(session-use-package t nil (session)))
 (custom-set-faces
@@ -172,6 +175,7 @@
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(default ((t (t:family "DejaVu Sans Mono" :foundry "PfEd" :slant normal :weight normal :height 128 :width normal))))
+ '(org-scheduled ((t (:foreground "MistyRose1"))))
  '(window-numbering-face ((t (:foreground "DeepPink" :underline "DeepPink" :weight bold))) t))
 
 (setq gc-cons-threshold best-gc-cons-threshold)

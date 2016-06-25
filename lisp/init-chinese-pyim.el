@@ -68,6 +68,10 @@
      (setq pyim-fuzzy-pinyin-adjust-function 'pyim-fuzzy-pinyin-adjust-shanghai)
      ;; }}
 
+     ;;     (setq-default pyim-english-input-switch-functions
+     ;;              '(pyim-probe-dynamic-english)
+     ;;     )
+     (global-set-key (kbd "M-i") 'pyim-convert-pinyin-at-point)
      ))
 
 (provide 'init-chinese-pyim)
