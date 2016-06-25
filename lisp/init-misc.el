@@ -105,6 +105,8 @@
                            my-git-log-patch-current-file
                            "cd $(git rev-parse --show-toplevel) && git diff"
                            "cd $(git rev-parse --show-toplevel) && git diff --cached"
+                           (shell-command-to-string (format "cd $(git rev-parse --show-toplevel) && git --no-pager log --date=short -S'%s' -p"
+                                                            (read-string "Git search string:")))
                            (car kill-ring)))
 (defun neotree-project-dir ()
   "Open NeoTree using the git root."
@@ -554,15 +556,12 @@ If step is -1, go backward."
 ;; }}
 
 (defun my-minibuffer-setup-hook ()
-  ;; Use paredit in the minibuffer
-  (conditionally-paredit-mode 1)
   (local-set-key (kbd "M-y") 'paste-from-x-clipboard)
   (local-set-key (kbd "C-k") 'kill-line)
   (setq gc-cons-threshold most-positive-fixnum))
 
 (defun my-minibuffer-exit-hook ()
   ;; evil-mode also use minibuf
-  (conditionally-paredit-mode -1)
   (setq gc-cons-threshold best-gc-cons-threshold))
 
 ;; @see http://bling.github.io/blog/2016/01/18/why-are-you-changing-gc-cons-threshold/
@@ -681,6 +680,12 @@ If step is -1, go backward."
 ;; fastdef.el
 (autoload 'fastdef-insert "fastdef" nil t)
 (autoload 'fastdef-insert-from-history "fastdef" nil t)
+
+;; indention management
+(defun my-toggle-indentation ()
+  (interactive)
+  (setq indent-tabs-mode (not indent-tabs-mode))
+  (message "indent-tabs-mode=%s" indent-tabs-mode))
 
 ;; {{ auto-save.el
 (require 'auto-save)

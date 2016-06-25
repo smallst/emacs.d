@@ -1,3 +1,6 @@
+(autoload 'ivy-recentf "ivy" "" t)
+(autoload 'ivy-read "ivy")
+
 (defvar counsel-process-filename-string nil
   "Give you a chance to change file name string for other counsel-* functions")
 ;; {{ @see http://oremacs.com/2015/04/19/git-grep-ivy/
@@ -62,7 +65,7 @@ Yank the file name at the same time.  FILTER is function to filter the collectio
       (goto-char (point-min))
       (forward-line (1- linenum)))))
 
-(defun counsel-git-grep (&optional open-another-window)
+(defun counsel-git-grep-in-project (&optional open-another-window)
   "Grep in the current git repository.
 If OPEN-ANOTHER-WINDOW is not nil, results are displayed in new window."
   (interactive "P")

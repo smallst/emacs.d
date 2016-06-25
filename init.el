@@ -95,6 +95,8 @@
   ;; (require 'init-gist)
   (require 'init-moz)
   (require 'init-gtags)
+  ;; init-evil dependent on init-clipboard
+  (require 'init-clipboard)
   ;; use evil mode (vi key binding)
   (require 'init-evil)
   (require 'init-sh)
@@ -106,7 +108,6 @@
   (require 'init-term-mode)
   (require 'init-web-mode)
   (require 'init-slime)
-  (require 'init-clipboard)
   (require 'init-company)
   (require 'init-chinese-pyim) ;; cannot be idle-required
   ;; need statistics of keyfreq asap

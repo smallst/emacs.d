@@ -417,7 +417,7 @@ If the character before and after CH is space or tab, CH is NOT slash"
        "gf" 'counsel-git-find-file
        "gc" 'counsel-git-find-file-committed-with-line-at-point
        "gl" 'counsel-git-grep-yank-line
-       "gg" 'counsel-git-grep ; quickest grep should be easy to press
+       "gg" 'counsel-git-grep-in-project ; quickest grep should be easy to press
        "ga" 'counsel-git-grep-by-author
        "gm" 'counsel-git-find-my-file
        "gs" 'ffip-show-diff ; find-file-in-project 5.0+
@@ -584,6 +584,7 @@ If the character before and after CH is space or tab, CH is NOT slash"
        "kk" 'scroll-other-window
        "jj" 'scroll-other-window-up
        "yy" 'hydra-launcher/body
+       "tt" 'my-toggle-indentation
        "gs" 'git-gutter:set-start-revision
        "gh" 'git-gutter-reset-to-head-parent
        "gr" 'git-gutter-reset-to-default
@@ -658,6 +659,23 @@ If the character before and after CH is space or tab, CH is NOT slash"
        "mm" 'mpc-which-song
        "mn" 'mpc-next-prev-song
        "mp" '(lambda () (interactive) (mpc-next-prev-song t)))
+;; }}
+
+;; {{ copy evil search text to clipboard/kill-ring, inspired from:
+;; http://emacs.stackexchange.com/questions/24099/how-to-yank-text-to-search-command-after-in-evil-mode/
+(defun my-cc-isearch-string ()
+  (interactive)
+  (if (and isearch-string (> (length isearch-string) 0))
+      (copy-yank-str isearch-string)))
+
+(defadvice evil-search-incrementally (after evil-search-incrementally-after-hack activate)
+  (my-cc-isearch-string))
+
+(defadvice evil-search-word (after evil-search-word-after-hack activate)
+  (my-cc-isearch-string))
+
+(defadvice evil-visualstar/begin-search (after evil-visualstar/begin-search-after-hack activate)
+  (my-cc-isearch-string))
 ;; }}
 
 ;; change mode-line color by evil state
