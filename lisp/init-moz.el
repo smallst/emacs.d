@@ -50,7 +50,7 @@ It gets the useful output of *MozRepl*, store it in `moz-controller-repl-output`
   (let (collection)
     (unless recentf-mode (recentf-mode 1))
     (setq collection (split-string retstring "\n" t))
-    (ivy-completing-read "pages:" collection :action (lambda (x) 
+    (ivy-read "pages:" collection :action (lambda (x) 
                                         (comint-send-string (inferior-moz-process) (concat "refreshtab=repl.tabs[" (number-to-string (cl-position x (split-string retstring "\n" t) :test 'equal)) "];"))))))
 (defun my-moz-setup ()
   (interactive)
