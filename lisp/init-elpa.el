@@ -149,6 +149,7 @@ ARCHIVE is the string name of the package archive.")
 
 (package-initialize)
 
+(require-package 'async)
 (require-package 'dash) ; required by string-edit
 ; color-theme 6.6.1 in elpa is buggy
 (require-package 'color-theme)
