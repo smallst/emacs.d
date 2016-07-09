@@ -23,6 +23,19 @@
 ;; here is the workaround
 (setq evil-default-cursor t)
 
+;; {{ multiple-cursors
+;; step 1, select thing in visual-mode
+;; step 2, `mc/mark-all-like-this' or `mc/mark-all-like-this-in-defun'
+;; step 3, `ace-mc-add-multiple-cursors' to remove cursor, press RET to confirm
+;; step 4, press s or S to start replace
+;; step 5, press C-g to quit multiple-cursors
+(define-key evil-visual-state-map (kbd "mn") 'mc/mark-next-like-this)
+(define-key evil-visual-state-map (kbd "ma") 'mc/mark-all-like-this)
+(define-key evil-visual-state-map (kbd "md") 'mc/mark-all-like-this-in-defun)
+(define-key evil-visual-state-map (kbd "mm") 'ace-mc-add-multiple-cursors)
+(define-key evil-visual-state-map (kbd "ms") 'ace-mc-add-single-cursor)
+;; }}
+
 ;; enable evil-mode
 (evil-mode 1)
 
@@ -411,6 +424,7 @@ If the character before and after CH is space or tab, CH is NOT slash"
        "gm" 'counsel-git-find-my-file
        "gs" 'ffip-show-diff ; find-file-in-project 5.0+
        "sf" 'counsel-git-show-file
+       "sh" 'my-select-from-search-text-history
        "df" 'counsel-git-diff-file
        "rjs" 'run-js
        "jsr" 'js-send-region
@@ -555,6 +569,7 @@ If the character before and after CH is space or tab, CH is NOT slash"
        "v=" 'git-gutter:popup-hunk
        "hh" 'cliphist-paste-item
        "yu" 'cliphist-select-item
+       "ih" 'my-goto-git-gutter ; use ivy-mode
        "nn" 'my-goto-next-hunk
        "pp" 'my-goto-previous-hunk
        "ww" 'narrow-or-widen-dwim
@@ -650,12 +665,20 @@ If the character before and after CH is space or tab, CH is NOT slash"
        "mp" '(lambda () (interactive) (mpc-next-prev-song t)))
 ;; }}
 
-;; {{ copy evil search text to clipboard/kill-ring, inspired from:
+;; {{ remember what we searched
 ;; http://emacs.stackexchange.com/questions/24099/how-to-yank-text-to-search-command-after-in-evil-mode/
+(defvar my-search-text-history nil "List of text I searched.")
+(defun my-select-from-search-text-history ()
+  (interactive)
+  (ivy-read "Search text history:" my-search-text-history
+            :action (lambda (item)
+                      (copy-yank-str item)
+                      (message "%s => clipboard & yank ring" item))))
 (defun my-cc-isearch-string ()
   (interactive)
   (if (and isearch-string (> (length isearch-string) 0))
-      (copy-yank-str isearch-string)))
+      ;; NOT pollute clipboard who has things to paste into Emacs
+      (add-to-list 'my-search-text-history isearch-string)))
 
 (defadvice evil-search-incrementally (after evil-search-incrementally-after-hack activate)
   (my-cc-isearch-string))
@@ -683,4 +706,11 @@ If the character before and after CH is space or tab, CH is NOT slash"
 (require 'evil-nerd-commenter)
 (evilnc-default-hotkeys)
 
+;; {{ evil-exchange
+;; press gx twice to exchange, gX to cancel
+(require 'evil-exchange)
+;; change default key bindings (if you want) HERE
+;; (setq evil-exchange-key (kbd "zx"))
+(evil-exchange-install)
+;; }}
 (provide 'init-evil)
