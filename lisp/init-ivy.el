@@ -30,7 +30,7 @@ Yank the file name at the same time.  FILTER is function to filter the collectio
         (default-directory (locate-dominating-file
                             default-directory ".git"))
         keyword
-        collection val lst)
+        collection)
 
     ;; insert base file name into kill ring is possible
     (kill-new (if counsel-process-filename-string
@@ -48,11 +48,14 @@ Yank the file name at the same time.  FILTER is function to filter the collectio
                                    "\n"
                                    t))
     (if filter (setq collection (funcall filter collection)))
-
-    (when (and collection (> (length collection) 0))
-      (setq val (if (= 1 (length collection)) (car collection)
-                    (ivy-completing-read (if no-keyword hint (format "matching \"%s\":" keyword)) collection)))
-      (funcall fn open-another-window val))))
+    (cond
+     ((and collection (= (length collection) 1))
+      (funcall fn open-another-window (car collection)))
+     (t
+      (ivy-read (if no-keyword hint (format "matching \"%s\":" keyword))
+                collection
+                :action (lambda (val)
+                          (funcall fn open-another-window val)))))))
 
 (defun counsel--open-grepped-file (open-another-window val)
   (let* ((lst (split-string val ":"))
@@ -170,7 +173,7 @@ If OPEN-ANOTHER-WINDOW is not nil, results are displayed in new window."
        ((= 1 (length collection))
         (counsel-replace-current-line leading-spaces (car collection)))
        ((> (length collection) 1)
-        (ivy-completing-read "lines:"
+        (ivy-read "lines:"
                   collection
                   :action (lambda (l)
                             (counsel-replace-current-line leading-spaces l))))))))
@@ -231,13 +234,13 @@ Or else, find files since 24 weeks (6 months) ago."
                           )))))
 
 (defun counsel-imenu-goto ()
-  "Go to buffer position"
+  "Imenu based on ivy-mode."
   (interactive)
   (unless (featurep 'imenu)
     (require 'imenu nil t))
   (let* ((imenu-auto-rescan t)
          (items (imenu--make-index-alist t)))
-    (ivy-completing-read "imenu items:"
+    (ivy-read "imenu items:"
               (ivy-imenu-get-candidates-from (delete (assoc "*Rescan*" items) items))
               :action (lambda (k) (imenu k)))))
 
@@ -265,7 +268,7 @@ Or else, find files since 24 weeks (6 months) ago."
                                            (cons key bookmark)))
                                        bookmarks))))
     ;; do the real thing
-    (ivy-completing-read "bookmarks:"
+    (ivy-read "bookmarks:"
               collection
               :action (lambda (bookmark)
                         (unless (featurep 'bookmark+)
@@ -311,13 +314,11 @@ Or else, find files since 24 weeks (6 months) ago."
                            (insert-file-contents (file-truename "~/.bash_history"))
                            (buffer-string))
                          "\n"
-                         t)))
-         val)
-    (when (and collection (> (length collection) 0)
-               (setq val (if (= 1 (length collection)) (car collection)
-                           (ivy-completing-read (format "Bash history:") collection))))
-      (kill-new val)
-      (message "%s => kill-ring" val))))
+                         t))))
+      (ivy-read (format "Bash history:") collection
+                :action (lambda (val))
+                (kill-new val)
+                (message "%s => kill-ring" val))))
 
 (defun counsel-git-show-hash-diff-mode (hash)
   (let ((show-cmd (format "git --no-pager show --no-color %s" hash)))
@@ -339,7 +340,7 @@ Or else, find files since 24 weeks (6 months) ago."
                               ;; fasd history
                               (if (executable-find "fasd")
                                   (split-string (shell-command-to-string "fasd -ld") "\n" t))))))
-    (ivy-completing-read "directories:" collection :action 'dired)))
+    (ivy-read "directories:" collection :action 'dired)))
 
 
 ;; {{ grep/ag
@@ -367,7 +368,7 @@ If ag (the_silver_searcher) exists, use ag."
                       "\n"
                       t)))
 
-    (ivy-completing-read (format "matching \"%s\" at %s:" keyword default-directory)
+    (ivy-read (format "matching \"%s\" at %s:" keyword default-directory)
               collection
               :action (lambda (val)
                         (funcall 'counsel--open-grepped-file open-another-window val)))))
