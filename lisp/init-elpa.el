@@ -52,6 +52,7 @@ But you may use safer HTTPS instead.")
     w3m
     erlang
     workgroups2
+    ox-reveal
     company-c-headers)
   "Don't install any Melpa packages except these packages")
 
@@ -253,5 +254,7 @@ ARCHIVE is the string name of the package archive.")
 (require-package 'define-word)
 (require-package 'quack) ;; for scheme
 (require-package 'hydra)
+(require-package 'ox-reveal)
+(require-package 'org2jekyll)
 
 (provide 'init-elpa)
