@@ -195,6 +195,9 @@
               emacs-lisp "lisp"))
 ;; }}
 
+<<<<<<< HEAD
+(load-library "ox-reveal")
+=======
 (defun org-demote-or-promote (&optional is-promote)
   (interactive "P")
   (unless (region-active-p)
@@ -202,5 +205,5 @@
   (if is-promote (org-do-promote)
     (org-do-demote)))
 
-(load-library "ox-reveal")
+>>>>>>> redguardtoo/master
 (provide 'init-org)

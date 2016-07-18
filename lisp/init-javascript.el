@@ -260,7 +260,9 @@ If HARDCODED-ARRAY-INDEX provided, array index in JSON path is replaced with it.
     (js2-refactor-mode 1)
     (flymake-mode -1)
     (define-key js2-mode-map "\C-cd" 'js-doc-insert-function-doc)
-    (define-key js2-mode-map "@" 'js-doc-insert-tag)))
+    (define-key js2-mode-map "@" 'js-doc-insert-tag)
+    ;; @see https://github.com/mooz/js2-mode/issues/350
+    (setq forward-sexp-function nil)))
 
 (autoload 'js2-mode "js2-mode" nil t)
 (add-hook 'js2-mode-hook 'my-js2-mode-setup)
@@ -283,19 +285,31 @@ If HARDCODED-ARRAY-INDEX provided, array index in JSON path is replaced with it.
 (add-hook 'coffee-mode-hook 'flymake-coffee-load)
 
 ;; {{ js-beautify
-(defun js-beautify ()
-  "Beautify a region of javascript using the code from jsbeautify.org.
-sudo pip install jsbeautifier"
-  (interactive)
-  (let ((orig-point (point)))
-    (unless (mark)
-      (mark-defun))
-    (shell-command-on-region (point)
-                             (mark)
+(defun js-beautify (&optional indent-size)
+  "Beautify selected region or whole buffer with js-beautify.
+INDENT-SIZE decide the indentation level.
+`sudo pip install jsbeautifier` to install js-beautify.'"
+  (interactive "P")
+  (let* ((orig-point (point))
+         (b (if (region-active-p) (region-beginning) (point-min)))
+         (e (if (region-active-p) (region-end) (point-max)))
+         (js-beautify (if (executable-find "js-beautify") "js-beautify"
+                        "jsbeautify")))
+    ;; detect indentation level
+    (unless indent-size
+      (setq indent-size (cond
+                         ((memq major-mode '(js-mode javascript-mode))
+                          js-indent-level)
+                         ((memq major-mode '(web-mode))
+                          web-mode-code-indent-offset)
+                         (t
+                          js2-basic-offset))))
+    ;; do it!
+    (shell-command-on-region b e
                              (concat "js-beautify"
                                      " --stdin "
                                      " --jslint-happy --brace-style=end-expand --keep-array-indentation "
-                                     (format " --indent-size=%d " js2-basic-offset))
+                                     (format " --indent-size=%d " indent-size))
                              nil t)
     (goto-char orig-point)))
 ;; }}
