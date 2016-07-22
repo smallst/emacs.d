@@ -127,6 +127,8 @@
   (require 'init-dying-mode)
   (require 'init-octave-mode)
   (require 'init-php-mode)
+  (require 'init-caffe-mode)
+  (require 'init-dot-mode)
   (require 'init-org2jekyll)
 
   ;; {{ idle require other stuff
@@ -167,7 +169,6 @@
  ;; If there is more than one, they won't work right.
  '(bmkp-last-as-first-bookmark-file "~/.emacs.d/bookmarks")
  '(git-gutter:handled-backends (quote (svn hg git)))
- '(puml-plantuml-jar-path "/home/smallst/.custom/plantuml.jar")
  '(safe-local-variable-values (quote ((lentic-init . lentic-orgel-org-init))))
  '(session-use-package t nil (session)))
 (custom-set-faces
