@@ -6,8 +6,6 @@
 
 ;(workgroups-mode 1) ; put this one at the bottom of .emacs
 ;; by default, the sessions are saved in "~/.emacs_workgroups"
-(autoload 'wg-create-workgroup "workgroups2" nil t)
-
 (defun my-wg-switch-workgroup ()
   (interactive)
   (let (group-names selected-group)
@@ -18,6 +16,8 @@
                     ;; re-shape list for the ivy-read
                     (cons (wg-workgroup-name group) group))
                   (wg-session-workgroup-list (read (f-read-text (file-truename wg-session-file))))))
+    (unless (featurep 'ivy)
+      (require 'ivy))
     (ivy-read "work groups" group-names
               :action (lambda (group)
                         (wg-find-session-file wg-default-session-file)
