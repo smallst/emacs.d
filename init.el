@@ -138,7 +138,7 @@
                                init-which-func
                                init-fonts
                                init-hs-minor-mode
-                               init-textile
+;                               init-textile
                                init-writting
                                init-doxygen
                                init-pomodoro
