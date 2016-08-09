@@ -130,6 +130,7 @@
   (require 'init-caffe-mode)
   (require 'init-dot-mode)
   (require 'init-org2jekyll)
+  (require 'init-auctex)
 
   ;; {{ idle require other stuff
   (setq idle-require-idle-delay 3)
@@ -139,7 +140,7 @@
                                init-hs-minor-mode
 ;                               init-textile
                                init-writting
-                               init-doxygen
+;                               init-doxygen
                                init-pomodoro
                                init-emacspeak
                                init-artbollocks-mode

@@ -53,6 +53,10 @@ But you may use safer HTTPS instead.")
     erlang
     workgroups2
     ox-reveal
+    ;helm-bibtex
+    ;biblio
+    ;biblio-core
+    ;let-alist
     company-c-headers)
   "Don't install any Melpa packages except these packages")
 
@@ -65,6 +69,7 @@ But you may use safer HTTPS instead.")
             ;; ("gnu" . "https://elpa.gnu.org/packages/")
                                         ;("melpa" . "https://melpa.org/packages/")
                                         ;("melpa-stable" . "https://stable.melpa.org/packages/")
+            ;;("gnu" .          "https://mirrors.tuna.tsinghua.edu.cn/elpa/gnu/")
             ("melpa" .        "https://mirrors.tuna.tsinghua.edu.cn/elpa/melpa/")
             ("melpa-stable" . "https://mirrors.tuna.tsinghua.edu.cn/elpa/melpa-stable/")
             ( "org" .         "https://mirrors.tuna.tsinghua.edu.cn/elpa/org/")
@@ -74,6 +79,7 @@ But you may use safer HTTPS instead.")
           ;; ("gnu" . "http://elpa.gnu.org/packages/")
                                         ;("melpa" . "http://melpa.org/packages/")
                                         ;("melpa-stable" . "http://stable.melpa.org/packages/")
+          ;;("gnu" .          "http://mirrors.tuna.tsinghua.edu.cn/elpa/gnu/")
           ("melpa" . "http://mirrors.tuna.tsinghua.edu.cn/elpa/melpa/")
           ("melpa-stable" . "http://mirrors.tuna.tsinghua.edu.cn/elpa/melpa-stable/")
           ( "org" . "http://mirrors.tuna.tsinghua.edu.cn/elpa/org/")
