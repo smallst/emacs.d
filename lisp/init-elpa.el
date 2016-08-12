@@ -264,5 +264,6 @@ ARCHIVE is the string name of the package archive.")
 (require-package 'hydra)
 (require-package 'ox-reveal)
 (require-package 'org2jekyll)
+(require-package 'protobuf-mode)
 
 (provide 'init-elpa)
