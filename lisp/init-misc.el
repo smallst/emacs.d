@@ -13,6 +13,20 @@
 (add-to-list 'auto-mode-alist '("\\.mailcap\\'" . conf-mode))
 ;; }}
 
+
+;; {{ auto-yasnippet
+;; Use C-q instead tab to complete snippet
+;; - `aya-create' at first, input ~ to mark the thing next
+;; - `aya-expand' to expand snippet
+;; - `aya-open-line' to finish
+(global-set-key (kbd "C-q") #'aya-open-line)
+;; }}
+
+;; {{ ace-link
+(ace-link-setup-default)
+(global-set-key (kbd "M-o") 'ace-link-addr)
+;; }}
+
 ;; open header file under cursor
 (global-set-key (kbd "C-x C-o") 'ffap)
 
@@ -70,26 +84,30 @@
 
 ;; {{ find-file-in-project (ffip)
 (defun my-git-show-selected-commit ()
-  "Run 'git show selected-commit' in shell"
+  "Run 'git show selected-commit' in shell."
   (let* ((git-cmd "git --no-pager log --date=short --pretty=format:'%h|%ad|%s|%an'")
          (git-cmd-rlts (split-string (shell-command-to-string git-cmd) "\n" t))
          (line (ivy-read "git log:" git-cmd-rlts)))
     (shell-command-to-string (format "git show %s"
                                      (car (split-string line "|" t))))))
 
-(defun my-git-log-patch-current-file ()
-  "Run 'git log -p --author=whoever' in shell"
-  (let* ((git-cmd-shortlog "git --no-pager log --format='%aN' | sort -u")
-         (git-cmd-shortlog-rlts (split-string (shell-command-to-string git-cmd-shortlog) "\n" t))
-         (original-author-name (ivy-read "git authors:" git-cmd-shortlog-rlts))
-         (git-cmd-log-dash-p (concat "git --no-pager log --no-color --date=short --pretty=format:'%h%d %ad %s (%an)'"
-                                      (format " --author='%s'" original-author-name)
-                                      (format " -p %s" (buffer-file-name)))))
-    (shell-command-to-string git-cmd-log-dash-p)))
+(defun my-git-diff-current-file ()
+  "Run 'git diff version:current-file current-file'."
+  (let* ((git-cmd (concat "git --no-pager log --date=short --pretty=format:'%h|%ad|%s|%an' "
+                          buffer-file-name))
+         (git-root (locate-dominating-file default-directory ".git"))
+         (git-cmd-rlts (nconc (split-string (shell-command-to-string "git branch --no-color --all") "\n" t)
+                              (split-string (shell-command-to-string git-cmd) "\n" t)))
+         (line (ivy-read "git diff same file with version" git-cmd-rlts)))
+    (shell-command-to-string (format "git --no-pager diff %s:%s %s"
+                                     (replace-regexp-in-string "^ *\\*? *" "" (car (split-string line "|" t)))
+                                     (file-relative-name buffer-file-name git-root)
+                                     buffer-file-name))))
 
 (setq ffip-match-path-instead-of-filename t)
 ;; I only use git
 (setq ffip-diff-backends '(my-git-show-selected-commit
+                           my-git-diff-current-file
                            my-git-log-patch-current-file
                            "cd $(git rev-parse --show-toplevel) && git diff"
                            "cd $(git rev-parse --show-toplevel) && git diff --cached"
@@ -196,11 +214,30 @@
 (which-key-mode 1)
 ;; }}
 
+
+(defun compilation-finish-hide-buffer-on-success (buf str)
+  "Could be reused by other major-mode after compilation."
+  (if (string-match "exited abnormally" str)
+      ;;there were errors
+      (message "compilation errors, press C-x ` to visit")
+    ;;no errors, make the compilation window go away in 0.5 seconds
+    (when (string-match "*compilation*" (buffer-name buf))
+      ;; @see http://emacswiki.org/emacs/ModeCompile#toc2
+      (bury-buffer "*compilation*")
+      (winner-undo)
+      (message "NO COMPILATION ERRORS!"))))
+
 (defun generic-prog-mode-hook-setup ()
   ;; turn off `linum-mode' when there are more than 5000 lines
   (if (buffer-too-big-p) (linum-mode -1))
 
   (unless (is-buffer-file-temp)
+
+    ;; @see http://xugx2007.blogspot.com.au/2007/06/benjamin-rutts-emacs-c-development-tips.html
+    (setq compilation-window-height 8)
+    (setq compilation-finish-functions
+          '(compilation-finish-hide-buffer-on-success))
+
     ;; fic-mode has performance issue on 5000 line C++, we can always use swiper instead
     ;; don't spell check double words
     (setq flyspell-check-doublon nil)

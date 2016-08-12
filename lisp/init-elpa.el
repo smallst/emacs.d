@@ -163,6 +163,8 @@ ARCHIVE is the string name of the package archive.")
 (require-package 'color-theme)
 (require-package 'auto-compile)
 (require-package 'avy)
+(require-package 'auto-yasnippet)
+(require-package 'ace-link)
 (require-package 'expand-region) ;; I prefer stable version
 (require-package 'fringe-helper)
 (require-package 'haskell-mode)
