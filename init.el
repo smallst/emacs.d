@@ -79,7 +79,7 @@
   (require 'init-erlang)
   (require 'init-javascript)
   (require 'init-org)
-  (require 'init-org-mime)
+  ;(require 'init-org-mime)
   (require 'init-org-protocol)
   (require 'init-css)
   (require 'init-python-mode)
@@ -149,11 +149,6 @@
   (when (require 'time-date nil t)
     (message "Emacs startup time: %d seconds."
              (time-to-seconds (time-since emacs-load-start-time))))
-
-  ;;----------------------------------------------------------------------------
-  ;; Locales (setting them earlier in this file doesn't work in X)
-  ;;----------------------------------------------------------------------------
-  (require 'init-locales)
 
   ;; my personal setup, other major-mode specific setup need it.
   ;; It's dependent on init-site-lisp.el
