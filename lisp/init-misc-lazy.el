@@ -1,16 +1,5 @@
 ;;; init-misc-lazy.el --- misc setup loaded later
 
-;; {{ smex
-;; (smex-initialize) ; Can be omitted. This might cause a (minimal) delay
-                  ; when Smex is auto-initialized on its first run.
-
-;; Please note "M-x" doesnot work in GUI Emacs 24.4!
-;; This is evil's bug
-;; https://bitbucket.org/lyro/evil/issue/437/m-x-is-undefined-in-emacs-244
-(global-set-key (kbd "M-x") 'smex)
-(global-set-key (kbd "M-X") 'smex-major-mode-commands)
-;; }}
-
 (setq auto-mode-alist
       (cons '("\\.textile\\'" . textile-mode) auto-mode-alist))
 
@@ -34,17 +23,6 @@
 ;; But don't show trailing whitespace in SQLi, inf-ruby etc.
 (add-hook 'comint-mode-hook
           (lambda () (setq show-trailing-whitespace nil)))
-
-
-;;----------------------------------------------------------------------------
-;; Fix per-window memory of buffer point positions
-;;----------------------------------------------------------------------------
-(global-pointback-mode)
-;; pointback-mode make it harder to insert latex macro
-;; @see https://github.com/redguardtoo/emacs.d/issues/307#issuecomment-212582241
-(add-hook 'LaTeX-mode-hook
-  (lambda ()
-    (pointback-mode -1)))
 
 ;;----------------------------------------------------------------------------
 ;; Page break lines

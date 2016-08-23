@@ -535,7 +535,6 @@ If the character before and after CH is space or tab, CH is NOT slash"
        "bj" 'buf-move-down
        "bh" 'buf-move-left
        "bl" 'buf-move-right
-       "so" 'sos
        "0" 'select-window-0
        "1" 'select-window-1
        "2" 'select-window-2
@@ -546,7 +545,7 @@ If the character before and after CH is space or tab, CH is NOT slash"
        "7" 'select-window-7
        "8" 'select-window-8
        "9" 'select-window-9
-       "xm" 'smex
+       "xm" 'counsel-M-x
        "xx" 'er/expand-region
        "xf" 'ido-find-file
        "xb" 'ido-switch-buffer

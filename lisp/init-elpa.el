@@ -28,7 +28,6 @@ But you may use safer HTTPS instead.")
     creole
     web
     idomenu
-    pointback
     buffer-move
     regex-tool
     quack
@@ -217,7 +216,6 @@ ARCHIVE is the string name of the package archive.")
 (require-package 'move-text)
 (require-package 'mwe-log-commands)
 (require-package 'page-break-lines)
-(require-package 'pointback)
 (require-package 'regex-tool)
 (require-package 'rinari)
 (require-package 'groovy-mode)
