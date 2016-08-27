@@ -204,7 +204,6 @@
   (if is-promote (org-do-promote)
     (org-do-demote)))
 
-(load-library "ox-reveal")
 (defun org-mime-html-hook-setup ()
   (org-mime-change-element-style "pre"
                                  "color:#E6E1DC; background-color:#232323; padding:0.5em;")

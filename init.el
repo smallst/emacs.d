@@ -136,6 +136,7 @@
   (setq idle-require-idle-delay 2)
   (setq idle-require-symbols '(init-misc-lazy
                                init-which-func
+                               init-ox-reveal
                                init-fonts
                                init-hs-minor-mode
                                init-writting
