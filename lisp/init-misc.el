@@ -131,9 +131,10 @@
 ;; {{ https://github.com/browse-kill-ring/browse-kill-ring
 (require 'browse-kill-ring)
 ;; no duplicates
-(setq browse-kill-ring-display-duplicates nil)
-;; preview is annoying
-(setq browse-kill-ring-show-preview nil)
+(setq browse-kill-ring-display-style 'one-line
+      browse-kill-ring-display-duplicates nil
+      ;; preview is annoying
+      browse-kill-ring-show-preview nil)
 (browse-kill-ring-default-keybindings)
 ;; hotkeys:
 ;; n/p => next/previous
@@ -578,11 +579,10 @@ If step is -1, go backward."
 (add-hook 'minibuffer-setup-hook #'my-minibuffer-setup-hook)
 (add-hook 'minibuffer-exit-hook #'my-minibuffer-exit-hook)
 
-
 ;; {{ string-edit-mode
 (defun string-edit-at-point-hook-setup ()
   (let ((major-mode-list (remove major-mode '(web-mode js2-mode js-mode css-mode emacs-lisp-mode)))
-        (str (buffer-substring-no-properties (point-min) (point-max))))
+        (str (my-buffer-str)))
     ;; (ivy-read "directories:" collection :action 'dired)
     ;; (message "original=%s" (se/find-original))
     ;; (message "major-mode-list=%s major-mode=%s" major-mode-list major-mode)
