@@ -1,8 +1,4 @@
 ;; {{ @see http://oremacs.com/2015/04/19/git-grep-ivy/
-
-(defvar counsel-process-filename-string nil
-  "Give you a chance to change file name string for other counsel-* functions")
-
 (defun counsel-escape (keyword)
   (setq keyword (replace-regexp-in-string "\"" "\\\\\"" keyword))
   (setq keyword (replace-regexp-in-string "\\?" "\\\\\?" keyword))
@@ -11,6 +7,8 @@
   (setq keyword (replace-regexp-in-string "\\." "\\\\\." keyword))
   (setq keyword (replace-regexp-in-string "\\[" "\\\\\[" keyword))
   (setq keyword (replace-regexp-in-string "\\]" "\\\\\]" keyword))
+  (setq keyword (replace-regexp-in-string "(" "\\\\\(" keyword))
+  (setq keyword (replace-regexp-in-string ")" "\\\\\)" keyword))
   keyword)
 
 (defun counsel-read-keyword (hint &optional default-when-no-active-region)
@@ -23,34 +21,29 @@
 (defmacro counsel-git-grep-or-find-api (fn git-cmd hint &optional no-keyword filter)
   "Apply FN on the output lines of GIT-CMD.  HINT is hint when user input.
 Yank the file name at the same time.  FILTER is function to filter the collection"
-  `(let ((str (if (buffer-file-name) (file-name-base (buffer-file-name)) ""))
-        (default-directory (locate-dominating-file
-                            default-directory ".git"))
-        keyword
-        collection)
+  `(let* ((str (if (buffer-file-name) (file-name-base (buffer-file-name)) ""))
+          (default-directory (locate-dominating-file
+                              default-directory ".git"))
+          keyword
+          collection)
 
-    ;; insert base file name into kill ring is possible
-    (kill-new (if counsel-process-filename-string
-                  (funcall counsel-process-filename-string str)
-                str))
+     (unless ,no-keyword
+       ;; selected region contains no regular expression
+       (setq keyword (counsel-read-keyword (concat "Enter " ,hint " pattern:" ))))
 
-    (unless ,no-keyword
-      ;; selected region contains no regular expression
-      (setq keyword (counsel-read-keyword (concat "Enter " ,hint " pattern:" ))))
-
-    (setq collection
-          (split-string (shell-command-to-string (if ,no-keyword ,git-cmd
-                                                   (format ,git-cmd keyword)))
-                        "\n"
-                        t))
-    (if ,filter (setq collection (funcall ,filter collection)))
-    (cond
-     ((and collection (= (length collection) 1))
-      (funcall ,fn (car collection)))
-     (t
-      (ivy-read (if ,no-keyword ,hint (format "matching \"%s\":" keyword))
-                collection
-                :action ,fn)))))
+     (setq collection
+           (split-string (shell-command-to-string (if ,no-keyword ,git-cmd
+                                                    (format ,git-cmd keyword)))
+                         "\n"
+                         t))
+     (if ,filter (setq collection (funcall ,filter collection)))
+     (cond
+      ((and collection (= (length collection) 1))
+       (funcall ,fn (car collection)))
+      (t
+       (ivy-read (if ,no-keyword ,hint (format "matching \"%s\":" keyword))
+                 collection
+                 :action ,fn)))))
 
 (defun counsel--open-grepped-file (val)
   (let* ((lst (split-string val ":"))
@@ -63,10 +56,11 @@ Yank the file name at the same time.  FILTER is function to filter the collectio
       (forward-line (1- linenum)))))
 
 (defun counsel-git-grep-in-project ()
-  "Grep in the current git repository."
+  "Grep in the current git repository.
+Extended regex is used, like (pattern1|pattern2)."
   (interactive)
   (counsel-git-grep-or-find-api 'counsel--open-grepped-file
-                                "git --no-pager grep -I --full-name -n --no-color -i -e \"%s\""
+                                "git --no-pager grep -I --full-name -n --no-color -E -e \"%s\""
                                 "grep"))
 
 (defvar counsel-git-grep-author-regex nil)
@@ -107,7 +101,6 @@ It's SLOW when more than 20 git blame process start."
                                         (counsel-read-keyword nil "HEAD"))
                                 "files from `git-show' "
                                 t))
-
 
 (defun counsel-git-diff-file ()
   "Find file in `git diff'."
@@ -271,7 +264,6 @@ Or else, find files since 24 weeks (6 months) ago."
         (git-cmd (format "git --no-pager blame -w -L %d,+1 --porcelain %s"
                          linenum
                          filename))
-
         (str (shell-command-to-string git-cmd))
         hash)
 
@@ -288,7 +280,7 @@ Or else, find files since 24 weeks (6 months) ago."
       (message "Current line is NOT committed yet!")))))
 
 (defun counsel-yank-bash-history ()
-  "Yank the bash history"
+  "Yank the bash history."
   (interactive)
   (shell-command "history -r") ; reload history
   (let* ((collection
@@ -299,9 +291,9 @@ Or else, find files since 24 weeks (6 months) ago."
                          "\n"
                          t))))
       (ivy-read (format "Bash history:") collection
-                :action (lambda (val))
-                (kill-new val)
-                (message "%s => kill-ring" val))))
+                :action (lambda (val)
+                          (kill-new val)
+                          (message "%s => kill-ring" val)))))
 
 (defun counsel-git-show-hash-diff-mode (hash)
   (let ((show-cmd (format "git --no-pager show --no-color %s" hash)))
@@ -309,7 +301,7 @@ Or else, find files since 24 weeks (6 months) ago."
                                   "*Git-show")))
 
 (defun counsel-recentf-goto ()
-  "Recent files"
+  "Recent files."
   (interactive)
   (unless recentf-mode (recentf-mode 1))
   (ivy-recentf))
@@ -326,7 +318,7 @@ Or else, find files since 24 weeks (6 months) ago."
     (ivy-read "directories:" collection :action 'dired)))
 
 
-;; {{ sift/ag/grep
+;; {{ ag/grep
 (defvar my-grep-ingore-dirs
   '(".git"
     ".bzr"
@@ -360,18 +352,9 @@ Or else, find files since 24 weeks (6 months) ago."
     "*~")
   "File names to ignore when grepping.")
 (defun my-grep-cli (keyword)
+  "Extended regex is used, like (pattern1|pattern2)."
   (let* (opts)
     (cond
-     ((executable-find "sift")
-      (setq opts (concat "--exclude-ext="
-                         (mapconcat 'identity my-grep-ingore-file-exts ",")
-                         " "
-                         (mapconcat (lambda (e) (format "--exclude-dirs='%s'" e))
-                                    my-grep-ingore-dirs " ")
-                         " "
-                         (mapconcat (lambda (e) (format "--exclude-files='%s'" e))
-                                    my-grep-ingore-file-names " ")))
-      (format "sift --err-skip-line-length --binary-skip -r -n --no-color %s \"%s\" ." opts keyword))
      ((executable-find "ag")
       (setq opts (concat (mapconcat (lambda (e) (format "--ignore-dir='%s'" e))
                                     my-grep-ingore-dirs " ")
@@ -391,11 +374,13 @@ Or else, find files since 24 weeks (6 months) ago."
                          " "
                          (mapconcat (lambda (e) (format "--exclude='%s'" e))
                                     my-grep-ingore-file-names " ")))
-      (format "grep -rsn %s \"%s\" * ." opts keyword)))))
+      ;; use extended regex always
+      (format "grep -rsnE %s \"%s\" * ." opts keyword)))))
 
 (defun my-grep ()
   "Grep at project root directory or current directory.
-If ag (the_silver_searcher) exists, use ag."
+If ag (the_silver_searcher) exists, use ag.
+Extended regex is used, like (pattern1|pattern2)."
   (interactive)
   (let* ((keyword (counsel-read-keyword "Enter grep pattern: "))
          (default-directory (or (and (fboundp 'ffip-get-project-root-directory)
@@ -406,5 +391,40 @@ If ag (the_silver_searcher) exists, use ag."
               collection
               :action 'counsel--open-grepped-file)))
 ;; }}
+
+(defun counsel-browse-kill-ring (&optional n)
+  "Use `browse-kill-ring' if it exists and N is 1.
+If N > 1, assume just yank the Nth item in `kill-ring'.
+If N is nil, use `ivy-mode' to browse the `kill-ring'."
+  (interactive "P")
+  (cond
+   ((or (not n) (and (= n 1) (not (fboundp 'browse-kill-ring))))
+    ;; remove duplicates in `kill-ring'
+    (let* ((candidates (cl-remove-if
+                   (lambda (s)
+                     (or (< (length s) 5)
+                         (string-match "\\`[\n[:blank:]]+\\'" s)))
+                   (delete-dups kill-ring))))
+      (let* ((ivy-height (/ (frame-height) 2)))
+        (ivy-read "Browse `kill-ring':"
+                  (mapcar
+                   (lambda (s)
+                     (let* ((w (frame-width))
+                            ;; display kill ring item in one line
+                            (key (replace-regexp-in-string "[ \t]*[\n\r]+[ \t]*" "\\\\n" s)))
+                       ;; strip the whitespace
+                       (setq key (replace-regexp-in-string "^[ \t]+" "" key))
+                       ;; fit to the minibuffer width
+                       (if (> (length key) w)
+                           (setq key (concat (substring key 0 (- w 4)) "...")))
+                       (cons key s)))
+                   candidates)
+                  :action 'my-insert-str))))
+   ((= n 1)
+    (browse-kill-ring))
+   ((> n 1)
+    (setq n (1- n))
+    (if (< n 0) (setq n 0))
+    (my-insert-str (nth n kill-ring)))))
 
 (provide 'init-ivy)

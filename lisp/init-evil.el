@@ -320,7 +320,7 @@ If the character before and after CH is space or tab, CH is NOT slash"
 
 (define-key evil-normal-state-map "Y" (kbd "y$"))
 (define-key evil-normal-state-map "go" 'goto-char)
-(define-key evil-normal-state-map (kbd "M-y") 'browse-kill-ring)
+(define-key evil-normal-state-map (kbd "M-y") 'counsel-browse-kill-ring)
 (define-key evil-normal-state-map (kbd "C-]") 'etags-select-find-tag-at-point)
 (define-key evil-visual-state-map (kbd "C-]") 'etags-select-find-tag-at-point)
 
@@ -377,6 +377,7 @@ If the character before and after CH is space or tab, CH is NOT slash"
        "bs" '(lambda () (interactive) (goto-edge-by-comparing-font-face -1))
        "es" 'goto-edge-by-comparing-font-face
        "vj" 'my-validate-json-or-js-expression
+       "mcr" 'my-create-regex-from-kill-ring
        "ntt" 'neotree-toggle
        "ntf" 'neotree-find ; open file in current buffer in neotree
        "ntd" 'neotree-project-dir
@@ -412,7 +413,7 @@ If the character before and after CH is space or tab, CH is NOT slash"
        "hp" 'etags-select-find-tag
        "mm" 'counsel-bookmark-goto
        "mk" 'bookmark-set
-       "yy" 'browse-kill-ring
+       "yy" 'counsel-browse-kill-ring
        "gf" 'counsel-git-find-file
        "gc" 'counsel-git-find-file-committed-with-line-at-point
        "gl" 'counsel-git-grep-yank-line
