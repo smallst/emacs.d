@@ -9,3 +9,6 @@
 * add-ins
  - C/C++ one-file compile and run command
  - mozrepl select tab to refresh
+ - caffe support
+ - golang support
+ - org-reveal

@@ -131,6 +131,7 @@
   (require 'init-dot-mode)
   (require 'init-org2jekyll)
   (require 'init-auctex)
+  (require 'init-go-mode)
 
   ;; {{ idle require other stuff
   (setq idle-require-idle-delay 2)

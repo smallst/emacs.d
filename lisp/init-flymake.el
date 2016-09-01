@@ -13,6 +13,7 @@
 ;; at which point buffer-file-name is nil
 (eval-after-load 'flymake
   '(progn
+     (require 'flymake-cursor)
      (defun flymake-can-syntax-check-file (file-name)
        "Determine whether we can syntax check FILE-NAME.
 Return nil if we cannot, non-nil if we can."

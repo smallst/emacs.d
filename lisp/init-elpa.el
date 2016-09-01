@@ -54,6 +54,7 @@ But you may use safer HTTPS instead.")
     erlang
     workgroups2
     ox-reveal
+    flymake-go
     ;helm-bibtex
     ;biblio
     ;biblio-core
@@ -266,5 +267,9 @@ ARCHIVE is the string name of the package archive.")
 (require-package 'ox-reveal)
 (require-package 'org2jekyll)
 (require-package 'protobuf-mode)
+(require-package 'go-mode)
+(require-package 'go-eldoc)
+(require-package 'company-go)
+(require-package 'flymake-go)
 
 (provide 'init-elpa)
