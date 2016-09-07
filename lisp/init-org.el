@@ -42,6 +42,7 @@
 ;;    `sudo USE="cjk" emerge texlive-xetex` on Gentoo Linux
 (setq org-latex-to-pdf-process ;; org v7
       '("xelatex -interaction nonstopmode -output-directory %o %f"
+        "bibtex %b"
         "xelatex -interaction nonstopmode -output-directory %o %f"
         "xelatex -interaction nonstopmode -output-directory %o %f"))
 (setq org-latex-pdf-process org-latex-to-pdf-process) ;; org v8

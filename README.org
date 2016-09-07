@@ -12,3 +12,15 @@
  - caffe support
  - golang support
  - org-reveal
+ - ox-bibtex
+** write paper with org-mode
+*** use ox-bibtex
+add 
+#+BEGIN_QUOTE
+#+BIBLIOGRAPHY: refs plain option:-a
+#+END_QUOTE
+use 
+```
+C-c C-x [
+```
+for add refrence

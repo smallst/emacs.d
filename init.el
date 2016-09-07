@@ -132,6 +132,7 @@
   (require 'init-dot-mode)
   (require 'init-org2jekyll)
   (require 'init-auctex)
+  (require 'ox-bibtex)
   (require 'init-go-mode)
 
   ;; {{ idle require other stuff
