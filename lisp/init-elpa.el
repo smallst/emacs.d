@@ -271,6 +271,6 @@ ARCHIVE is the string name of the package archive.")
 (require-package 'go-mode)
 (require-package 'go-eldoc)
 (require-package 'company-go)
-(require-package 'flymake-go)
+;(require-package 'flymake-go)
 
 (provide 'init-elpa)
