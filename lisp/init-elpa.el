@@ -12,6 +12,9 @@ But you may use safer HTTPS instead.")
     auto-yasnippet
     bbdb
     color-theme
+    ivy
+    counsel
+    swiper
     wgrep
     robe
     groovy-mode
@@ -104,10 +107,10 @@ But you may use safer HTTPS instead.")
 ;; Patch up annoying package.el quirks
 (defadvice package-generate-autoloads (after close-autoloads (name pkg-dir) activate)
   "Stop package.el from leaving open autoload files lying around."
-  (let ((path (expand-file-name (concat
-                                 ;; name is string when emacs <= 24.3.1,
-                                 (if (symbolp name) (symbol-name name) name)
-                                 "-autoloads.el") pkg-dir)))
+  (let* ((path (expand-file-name (concat
+                                  ;; name is string when emacs <= 24.3.1,
+                                  (if (symbolp name) (symbol-name name) name)
+                                  "-autoloads.el") pkg-dir)))
     (with-current-buffer (find-file-existing path)
       (kill-buffer nil))))
 
