@@ -134,6 +134,7 @@
   (require 'init-auctex)
   (require 'ox-bibtex)
   (require 'init-go-mode)
+  (require 'init-lsl-mode)
 
   ;; {{ idle require other stuff
   (setq idle-require-idle-delay 2)

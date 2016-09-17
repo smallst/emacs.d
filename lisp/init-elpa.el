@@ -59,6 +59,7 @@ But you may use safer HTTPS instead.")
     ;biblio
     ;biblio-core
     ;let-alist
+    graphviz-dot-mode
     company-c-headers)
   "Don't install any Melpa packages except these packages")
 
@@ -271,6 +272,7 @@ ARCHIVE is the string name of the package archive.")
 (require-package 'go-mode)
 (require-package 'go-eldoc)
 (require-package 'company-go)
+(require-package 'graphviz-dot-mode)
 ;(require-package 'flymake-go)
 
 (provide 'init-elpa)
