@@ -31,6 +31,13 @@
         comint-send-input
         comint-previous-input
         delete-backward-char
+        ;; {{ nothing to optimize in dired
+        dired
+        dired-do-async-shell-command
+        dired-find-file
+        diredp-next-line
+        diredp-previous-line
+        ;; }}
         describe-variable
         erase-message-buffer
         eval-buffer
@@ -229,5 +236,16 @@
 ;; And use keyfreq-show to see how many times you used a command.
 ;; comment out below line if there is performance impact
 (turnon-keyfreq-mode)
+
+;; Disable noisy echo message and keep silent.
+(defun keyfreq-autosave--do-silent ()
+  "Function executed periodically to save the `keyfreq-table' in `keyfreq-file'."
+  ;; I want to exit emacs as usually even there is exception here
+  (condition-case nil
+      (progn
+        (keyfreq-table-save keyfreq-table))
+    (error
+     (message "%s is corrupt" keyfreq-file))))
+(advice-add 'keyfreq-autosave--do :override #'keyfreq-autosave--do-silent)
 
 (provide 'init-keyfreq)
