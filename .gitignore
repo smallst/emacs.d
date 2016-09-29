@@ -56,4 +56,4 @@ projectile.cache
 .unpacked
 srecode-map.el
 custom-set-variables.el
-bookmarks
+.smex-items
