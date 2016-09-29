@@ -6,4 +6,5 @@
   (TeX-source-correlate-mode 1)
 )
 (add-hook 'TeX-mode-hook 'my-zathura-hook)
+(add-hook 'LaTeX-mode-hook 'turn-on-cdlatex)
 (provide 'init-auctex)
