@@ -62,6 +62,7 @@ But you may use safer HTTPS instead.")
     ;biblio
     ;biblio-core
     ;let-alist
+    zeal-at-point
     graphviz-dot-mode
     company-c-headers)
   "Don't install any Melpa packages except these packages")
