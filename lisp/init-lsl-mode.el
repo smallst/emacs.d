@@ -1,6 +1,6 @@
 (require 'xlsl-mode)
 (add-to-list 'auto-mode-alist '("\\.lsl\\'" . xlsl-mode))
-(setq xlsl-lslint-path "~/Public/lslint/lslint")
+(setq xlsl-xlslint-path "~/Public/lslint/lslint")
 (defun my-xlsl-mode-customizations ()
   "Some customization for xlsl-mode."
   (define-key xlsl-mode-map (kbd "C-l") 'xlsl-complete-symbol)
