@@ -164,8 +164,7 @@
 
   ;; my personal setup, other major-mode specific setup need it.
   ;; It's dependent on init-site-lisp.el
-  (if (file-exists-p "~/.custom.el") (load-file "~/.custom.el"))
-  )
+  (if (file-exists-p "~/.custom.el") (load-file "~/.custom.el")))
 
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
