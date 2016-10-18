@@ -8,12 +8,12 @@
         (end-regexp "^[ \t]*#\\+end_\\(src\\|html\\|latex\\)")
         (old-flag case-fold-search)
         b e)
-      (save-excursion
-        (setq case-fold-search t)
-        (setq b (re-search-backward begin-regexp nil t))
-        (if b (setq e (re-search-forward end-regexp nil t)))
-        (setq case-fold-search old-flag))
-      (if (and b e (< (point) e)) (setq rlt t))
+    (save-excursion
+      (setq case-fold-search t)
+      (setq b (re-search-backward begin-regexp nil t))
+      (if b (setq e (re-search-forward end-regexp nil t)))
+      (setq case-fold-search old-flag))
+    (if (and b e (< (point) e)) (setq rlt t))
     rlt))
 
 ;; no spell check for property
@@ -24,11 +24,11 @@
 (defadvice org-mode-flyspell-verify (after org-mode-flyspell-verify-hack activate)
   (let ((run-spellcheck ad-return-value))
     (if ad-return-value
-      (cond
-       ((org-mode-is-code-snippet)
-        (setq run-spellcheck nil))
-       ((org-mode-current-line-is-property)
-        (setq run-spellcheck nil))))
+        (cond
+         ((org-mode-is-code-snippet)
+          (setq run-spellcheck nil))
+         ((org-mode-current-line-is-property)
+          (setq run-spellcheck nil))))
     (setq ad-return-value run-spellcheck)))
 ;; }}
 
@@ -72,7 +72,7 @@
                             'display)
         (narrow-to-region start end)
         (goto-char (point-min)))
-      (narrow-to-region start end)))
+    (narrow-to-region start end)))
 
 ;; @see https://gist.github.com/mwfogleman/95cc60c87a9323876c6c
 (defun narrow-or-widen-dwim (&optional use-indirect-buffer)
@@ -164,7 +164,9 @@ If use-indirect-buffer is not nil, use `indirect-buffer' to hold the widen conte
      (setq org-imenu-depth 9)
      (require 'org-clock)
      ;; @see http://irreal.org/blog/1
-     (setq org-src-fontify-natively t)))
+     (setq org-src-fontify-natively t)
+     
+     ))
 
 (defun org-mode-hook-setup ()
   (setq evil-auto-indent nil)
@@ -187,7 +189,11 @@ If use-indirect-buffer is not nil, use `indirect-buffer' to hold the widen conte
 
   ;; display wrapped lines instead of truncated lines
   (setq truncate-lines nil)
-  (setq word-wrap t))
+  (setq word-wrap t)
+  
+  (setq org-format-latex-options (plist-put
+                                  org-format-latex-options :scale 1.8))
+  )
 (add-hook 'org-mode-hook 'org-mode-hook-setup)
 
 (defadvice org-open-at-point (around org-open-at-point-choose-browser activate)
