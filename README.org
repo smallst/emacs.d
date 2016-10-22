@@ -16,9 +16,7 @@
 ** write paper with org-mode
 *** use ox-bibtex
 add 
-````org
 #+BEGIN_QUOTE
 #+BIBLIOGRAPHY: refs plain option:-a
 #+END_QUOTE
-````
-use `C-c C-x [` for add refrence
+use src_sh{C-c C-x [} for add refrence
