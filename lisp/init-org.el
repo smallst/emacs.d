@@ -40,11 +40,12 @@
 ;; and you need install texlive-xetex on different platforms
 ;; To install texlive-xetex:
 ;;    `sudo USE="cjk" emerge texlive-xetex` on Gentoo Linux
+
 (setq org-latex-to-pdf-process ;; org v7
-      '("xelatex -interaction nonstopmode -output-directory %o %f"
+      '("xelatex -shell-escape -interaction nonstopmode -output-directory %o %f"
         "bibtex %b"
-        "xelatex -interaction nonstopmode -output-directory %o %f"
-        "xelatex -interaction nonstopmode -output-directory %o %f"))
+        "xelatex -shell-escape -interaction nonstopmode -output-directory %o %f"
+        "xelatex -shell-escape -interaction nonstopmode -output-directory %o %f"))
 (setq org-latex-pdf-process org-latex-to-pdf-process) ;; org v8
 ;; }}
 
@@ -166,6 +167,10 @@ If use-indirect-buffer is not nil, use `indirect-buffer' to hold the widen conte
      ;; @see http://irreal.org/blog/1
      (setq org-src-fontify-natively t)
      
+     (setq org-latex-listings 'minted)
+     (require 'ox-latex)
+     (add-to-list 'org-latex-packages-alist '("" "minted" nil))
+     ;(setq org-latex-create-formula-image-program 'imagemagick)
      ))
 
 (defun org-mode-hook-setup ()
