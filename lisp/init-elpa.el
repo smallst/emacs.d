@@ -9,12 +9,10 @@ But you may use safer HTTPS instead.")
 ;; Feel free to add more packages!
 (defvar melpa-include-packages
   '(ace-mc
-    auto-yasnippet
     bbdb
     color-theme
     ivy
     counsel
-    swiper
     wgrep
     robe
     groovy-mode
@@ -77,6 +75,7 @@ But you may use safer HTTPS instead.")
                                         ;("melpa" . "https://melpa.org/packages/")
                                         ;("melpa-stable" . "https://stable.melpa.org/packages/")
             ;;("gnu" .          "https://mirrors.tuna.tsinghua.edu.cn/elpa/gnu/")
+            ("my-js2-mode" .  "https://raw.githubusercontent.com/redguardtoo/js2-mode/release/")
             ("melpa" .        "https://mirrors.tuna.tsinghua.edu.cn/elpa/melpa/")
             ("melpa-stable" . "https://mirrors.tuna.tsinghua.edu.cn/elpa/melpa-stable/")
             ( "org" .         "https://mirrors.tuna.tsinghua.edu.cn/elpa/org/")
@@ -87,6 +86,7 @@ But you may use safer HTTPS instead.")
                                         ;("melpa" . "http://melpa.org/packages/")
                                         ;("melpa-stable" . "http://stable.melpa.org/packages/")
           ;;("gnu" .          "http://mirrors.tuna.tsinghua.edu.cn/elpa/gnu/")
+            ("my-js2-mode" .  "http://raw.githubusercontent.com/redguardtoo/js2-mode/release/")
           ("melpa" . "http://mirrors.tuna.tsinghua.edu.cn/elpa/melpa/")
           ("melpa-stable" . "http://mirrors.tuna.tsinghua.edu.cn/elpa/melpa-stable/")
           ( "org" . "http://mirrors.tuna.tsinghua.edu.cn/elpa/org/")
