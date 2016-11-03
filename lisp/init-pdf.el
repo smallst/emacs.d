@@ -1,6 +1,4 @@
 (pdf-tools-install)
-(add-to-list 'evil-emacs-state-modes 'pdf-view-mode)
-(add-to-list 'evil-emacs-state-modes 'pdf-annot-list-mode)
 (define-pdf-cache-function pagelabels)
 (defun pdf-view-page-number ()
   (interactive)
@@ -9,7 +7,4 @@
                 (pdf-cache-pagelabels))
             (number-to-string (pdf-view-current-page))
             (number-to-string (pdf-cache-number-of-pages))))
-(add-hook 'pdf-view-mode-hook
-          (lambda ()
-            (linum-mode 0)))
 (provide 'init-pdf)

@@ -7,10 +7,10 @@
 ;; @see https://bitbucket.org/lyro/evil/issue/511/let-certain-minor-modes-key-bindings
 (defmacro adjust-major-mode-keymap-with-evil (m &optional r)
   `(eval-after-load (quote ,(if r r m))
-    '(progn
-       (evil-make-overriding-map ,(intern (concat m "-mode-map")) 'normal)
-       ;; force update evil keymaps after git-timemachine-mode loaded
-       (add-hook (quote ,(intern (concat m "-mode-hook"))) #'evil-normalize-keymaps))))
+     '(progn
+        (evil-make-overriding-map ,(intern (concat m "-mode-map")) 'normal)
+        ;; force update evil keymaps after git-timemachine-mode loaded
+        (add-hook (quote ,(intern (concat m "-mode-hook"))) #'evil-normalize-keymaps))))
 
 (adjust-major-mode-keymap-with-evil "git-timemachine")
 (adjust-major-mode-keymap-with-evil "browse-kill-ring")
@@ -64,13 +64,13 @@
 
 ;; ffip-diff-mode (read only) evil setup
 (defun ffip-diff-mode-hook-setup ()
-    (evil-local-set-key 'normal "K" 'diff-hunk-prev)
-    (evil-local-set-key 'normal "J" 'diff-hunk-next)
-    (evil-local-set-key 'normal "P" 'diff-file-prev)
-    (evil-local-set-key 'normal "N" 'diff-file-next)
-    (evil-local-set-key 'normal "q" 'ffip-diff-quit)
-    (evil-local-set-key 'normal (kbd "RET") 'ffip-diff-find-file)
-    (evil-local-set-key 'normal "o" 'ffip-diff-find-file))
+  (evil-local-set-key 'normal "K" 'diff-hunk-prev)
+  (evil-local-set-key 'normal "J" 'diff-hunk-next)
+  (evil-local-set-key 'normal "P" 'diff-file-prev)
+  (evil-local-set-key 'normal "N" 'diff-file-next)
+  (evil-local-set-key 'normal "q" 'ffip-diff-quit)
+  (evil-local-set-key 'normal (kbd "RET") 'ffip-diff-find-file)
+  (evil-local-set-key 'normal "o" 'ffip-diff-find-file))
 (add-hook 'ffip-diff-mode-hook 'ffip-diff-mode-hook-setup)
 
 (require 'evil-mark-replace)
@@ -116,12 +116,12 @@
 If the character before and after CH is space or tab, CH is NOT slash"
   (let (rlt prefix-ch postfix-ch)
     (when (and (> (point) (point-min)) (< (point) (point-max)))
-        (save-excursion
-          (backward-char)
-          (setq prefix-ch (following-char)))
-        (save-excursion
-          (forward-char)
-          (setq postfix-ch (following-char))))
+      (save-excursion
+        (backward-char)
+        (setq prefix-ch (following-char)))
+      (save-excursion
+        (forward-char)
+        (setq postfix-ch (following-char))))
     (if (and (not (or (= prefix-ch 32) (= postfix-ch 32)))
              (or (= ch 47) (= ch 92)) )
         (setq rlt t))
@@ -156,9 +156,9 @@ If the character before and after CH is space or tab, CH is NOT slash"
     (when (and b e)
       (setq b (+ 1 b))
       (when (save-excursion
-                (goto-char e)
-                (setq f (evil-filepath-search-forward-char 'evil-filepath-is-separator-char t))
-                (and f (>= f b)))
+              (goto-char e)
+              (setq f (evil-filepath-search-forward-char 'evil-filepath-is-separator-char t))
+              (and f (>= f b)))
         (setq rlt (list b (+ 1 f) (- e 1)))))
     rlt))
 
@@ -299,6 +299,8 @@ If the character before and after CH is space or tab, CH is NOT slash"
         (weibo-timeline-mode . emacs)
         (weibo-post-mode . emacs)
         (woman-mode . emacs)
+        (pdf-view-mode . emacs)
+        (pdf-annot-list-mode . emacs)
         (sr-mode . emacs)
         (profiler-report-mode . emacs)
         (dired-mode . emacs)
