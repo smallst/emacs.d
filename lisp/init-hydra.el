@@ -77,6 +77,8 @@
   '(progn
      (defhydra hydra-gnus-summary (:color blue)
        "?"
+       ("s" gnus-summary-show-thread "Show thread")
+       ("h" gnus-summary-hide-thread "Hide thread")
        ("n" gnus-summary-insert-new-articles "Refresh / N")
        ("f" gnus-summary-mail-forward "Fwd C-c C-f")
        ("!" gnus-summary-tick-article-forward "Mail -> disk !")
@@ -125,7 +127,8 @@
   (local-set-key (kbd "C-c C-y") 'hydra-message/body))
 (add-hook 'message-mode-hook 'message-mode-hook-hydra-setup)
 ;; }}
-;; dired
+
+;; {{ dired
 (eval-after-load 'dired
   '(progn
      (defhydra hydra-dired (:color blue)
@@ -143,6 +146,7 @@
 (defun dired-mode-hook-hydra-setup ()
   (local-set-key (kbd "y") 'hydra-dired/body))
 (add-hook 'dired-mode-hook 'dired-mode-hook-hydra-setup)
+;; }}
+
 (provide 'init-hydra)
 ;;; init-hydra.el ends here
-
