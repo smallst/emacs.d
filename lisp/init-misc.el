@@ -341,7 +341,9 @@ See \"Reusing passwords for several connections\" from INFO.
   (if (and (not (and buffer-file-name
                      (file-writable-p buffer-file-name)))
            ;; sudo edit only physical file
-           buffer-file-name)
+           buffer-file-name
+           ;; sudo edit only /etc/**/*
+           (string-match-p "^/etc/" buffer-file-name))
       (find-alternate-file (concat "/sudo:root@127.0.0.1:"
                                    buffer-file-name))))
 ;; }}
@@ -758,7 +760,7 @@ If FILE-OPENED, current file is still opened."
   (let* ((msg (read-string "Say (ENTER to abort):"))
          (open-opts (if file-opened "-f leaveunchanged+reopen -r" ""))
          (full-opts (format "submit -d '%s' %s" msg open-opts)))
-    (message "(p4-generate-cmd full-opts)=%s" (p4-generate-cmd full-opts))
+    ;; (message "(p4-generate-cmd full-opts)=%s" (p4-generate-cmd full-opts))
     (if (string= "" msg)
         (message "Abort submit.")
       (shell-command (p4-generate-cmd full-opts))
@@ -798,4 +800,49 @@ If FILE-OPENED, current file is still opened."
 (autoload 'verilog-mode "verilog-mode" "Verilog mode" t )
 (add-to-list 'auto-mode-alist '("\\.[ds]?vh?\\'" . verilog-mode))
 
+;; {{ xterm
+(defun run-after-make-frame-hooks (frame)
+  (select-frame frame)
+  (unless window-system
+    ;; Mouse in a terminal (Use shift to paste with middle button)
+    (xterm-mouse-mode 1)))
+(add-hook 'after-make-frame-functions 'run-after-make-frame-hooks)
+;; }}
+
+;; flymake
+(setq flymake-gui-warnings-enabled nil)
+
+;; {{ check attachments
+(defun my-message-current-line-cited-p ()
+  "Indicate whether the line at point is a cited line."
+  (save-match-data
+    (string-match (concat "^" message-cite-prefix-regexp)
+                  (buffer-substring (line-beginning-position) (line-end-position)))))
+
+(defun my-message-says-attachment-p ()
+  "Return t if the message suggests there can be an attachment."
+  (save-excursion
+    (goto-char (point-min))
+    (save-match-data
+      (let (search-result)
+        (while
+            (and (setq search-result (re-search-forward "\\(attach\\|pdf\\|file\\|screen ?shot\\)" nil t))
+                 (my-message-current-line-cited-p)))
+        search-result))))
+
+(defun my-message-has-attachment-p ()
+  "Return t if the message has an attachment."
+  (save-excursion
+    (goto-char (point-min))
+    (save-match-data
+      (re-search-forward "<#part" nil t))))
+
+(defun my-message-pre-send-check-attachment ()
+  (when (and (my-message-says-attachment-p)
+             (not (my-message-has-attachment-p)))
+    (unless
+        (y-or-n-p "The message suggests that you may want to attach something, but no attachment is found. Send anyway?")
+      (error "It seems that an attachment is needed, but none was found. Aborting sending."))))
+(add-hook 'message-send-hook 'my-message-pre-send-check-attachment)
+;; }}
 (provide 'init-misc)

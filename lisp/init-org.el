@@ -197,7 +197,7 @@ If use-indirect-buffer is not nil, use `indirect-buffer' to hold the widen conte
   (setq word-wrap t)
   
   (setq org-format-latex-options (plist-put
-                                  org-format-latex-options :scale 2.0))
+                                  org-format-latex-options :scale 1.4))
   )
 (add-hook 'org-mode-hook 'org-mode-hook-setup)
 
