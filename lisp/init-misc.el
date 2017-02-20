@@ -102,12 +102,15 @@
 ;; I only use git
 (setq ffip-diff-backends '(my-git-show-selected-commit
                            my-git-diff-current-file
-                           my-git-log-patch-current-file
+                           ;; `git log -p' current file
+                           (shell-command-to-string (format "cd $(git rev-parse --show-toplevel) && git --no-pager log --date=short -p '%s'"
+                                                            (buffer-file-name)))
                            "cd $(git rev-parse --show-toplevel) && git diff"
                            "cd $(git rev-parse --show-toplevel) && git diff --cached"
                            (shell-command-to-string (format "cd $(git rev-parse --show-toplevel) && git --no-pager log --date=short -S'%s' -p"
                                                             (read-string "Git search string:")))
                            (car kill-ring)))
+
 (defun neotree-project-dir ()
   "Open NeoTree using the git root."
   (interactive)
@@ -700,6 +703,17 @@ If step is -1, go backward."
 (setq cliphist-select-item-callback 'my-select-cliphist-item)
 ;; }}
 
+(defun extract-list-from-package-json ()
+  "Extract package list from package.json."
+  (interactive)
+  (let* ((str (my-use-selected-string-or-ask "")))
+    (message "my-select-cliphist-item called => %s" str)
+    (setq str (replace-regexp-in-string ":.*$\\|\"" "" str))
+    ;; join lines
+    (setq str (replace-regexp-in-string "[\r\n \t]+" " " str))
+    (copy-yank-str str)
+    (message "%s => clipboard & yank ring" str)))
+
 (defun pabs()
   "Relative path to full path."
   (interactive)
@@ -751,12 +765,14 @@ If step is -1, go backward."
   "(car p4-file-to-url) is the original file prefix
 (cadr p4-file-to-url) is the url prefix")
 
+(defun p4-current-file-url ()
+  (replace-regexp-in-string (car p4-file-to-url)
+                            (cadr p4-file-to-url)
+                            buffer-file-name))
+
 (defun p4-generate-cmd (opts)
-  (format "p4 %s %s"
-          opts
-          (replace-regexp-in-string (car p4-file-to-url)
-                                    (cadr p4-file-to-url)
-                                    buffer-file-name)))
+  (format "p4 %s %s" opts (p4-current-file-url)))
+
 (defun p4edit ()
   "p4 edit current file."
   (interactive)
@@ -784,19 +800,48 @@ If FILE-OPENED, current file is still opened."
   (shell-command (p4-generate-cmd "revert"))
   (read-only-mode 1))
 
-(defun p4history ()
-  "Show history of current file with patches displayed, like `git log -p'."
-  (interactive)
-  (let* ((changes (split-string (shell-command-to-string (p4-generate-cmd "changes")) "\n"))
-         rlt-buf
-         (content (mapconcat (lambda (line)
-                               (let* ((chg (nth 1 (split-string line "[\t ]+"))))
-                                 (if chg (shell-command-to-string (format "p4 describe -du %s" chg)))))
-                             changes
-                             "\n\n")))
-    (if (get-buffer "*p4log*")
-        (kill-buffer "*p4log*"))
-    (setq rlt-buf (get-buffer-create "*p4log*"))
+(defun p4-show-changelist-patch (line)
+  (let* ((chg (nth 1 (split-string line "[\t ]+")))
+         (url (p4-current-file-url))
+         (pattern "^==== //.*====$")
+         sep
+         seps
+         (start 0)
+         (original (if chg (shell-command-to-string (format "p4 describe -du %s" chg)) ""))
+         rlt)
+
+    (while (setq sep (string-match pattern original start))
+      (let* ((str (match-string 0 original)))
+        (setq start (+ sep (length str)))
+        (add-to-list 'seps (list sep str) t)))
+    (setq rlt (substring original 0 (car (nth 0 seps))))
+    (let* ((i 0) found)
+      (while (and (not found)
+                  (< i (length seps)))
+        (when (string-match url (cadr (nth i seps)))
+          (setq rlt (concat rlt (substring original
+                                           (car (nth i seps))
+                                           (if (= i (- (length seps) 1))
+                                               (length original)
+                                             (car (nth (+ 1 i) seps))))))
+          ;; out of loop now since current file patch found
+          (setq found t))
+        (setq i (+ 1 i))))
+
+    ;; remove p4 verbose bullshit
+    (setq rlt (replace-regexp-in-string "^\\(Affected\\|Moved\\) files \.\.\.[\r\n]+\\(\.\.\. .*[\r\n]+\\)+"
+                                        ""
+                                        rlt))
+    (setq rlt (replace-regexp-in-string "Differences \.\.\.[\r\n]+" "" rlt))
+    ;; one line short description of change list
+    (setq rlt (replace-regexp-in-string "Change \\([0-9]+\\) by \\([^ @]+\\)@[^ @]+ on \\([^ \r\n]*\\).*[\r\n \t]+\\([^ \t].*\\)" "\\1 by \\2@\\3 \\4" rlt))
+    rlt))
+
+(defun p4--create-buffer (buf-name content &optional enable-imenu)
+  (let* (rlt-buf)
+    (if (get-buffer buf-name)
+        (kill-buffer buf-name))
+    (setq rlt-buf (get-buffer-create buf-name))
     (save-current-buffer
       (switch-to-buffer-other-window rlt-buf)
       (set-buffer rlt-buf)
@@ -804,7 +849,29 @@ If FILE-OPENED, current file is still opened."
       (insert content)
       (diff-mode)
       (goto-char (point-min))
+      ;; nice imenu output
+      (if enable-imenu
+          (setq imenu-create-index-function
+                (lambda ()
+                  (save-excursion
+                    (imenu--generic-function '((nil "^[0-9]+ by .*" 0)))))))
+      ;; quit easily in evil-mode
       (evil-local-set-key 'normal "q" (lambda () (interactive) (quit-window t))))))
+
+(defun p4diff ()
+  "Show diff of current file like `git diff'."
+  (interactive)
+  (let* ((content (shell-command-to-string (p4-generate-cmd "diff -du -db"))))
+    (p4--create-buffer "*p4diff*" content)))
+
+(defun p4history ()
+  "Show history of current file like `git log -p'."
+  (interactive)
+  (let* ((changes (split-string (shell-command-to-string (p4-generate-cmd "changes")) "\n"))
+         (content (mapconcat 'p4-show-changelist-patch
+                             changes
+                             "\n\n")))
+    (p4--create-buffer "*p4log*" content t)))
 ;; }}
 
 (defun my-get-total-hours ()
