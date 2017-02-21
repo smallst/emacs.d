@@ -137,7 +137,8 @@ Please note it has NOT effect on evil text object!")
 (defun evilnc--fix-buggy-major-modes ()
   "Fix major modes whose comment regex is buggy.
 See http://lists.gnu.org/archive/html/bug-gnu-emacs/2013-03/msg00891.html."
-  (if (eq major-mode 'autoconf-mode)
+  (cond
+   ((eq major-mode 'autoconf-mode)
     ;; since comment-use-syntax is nil in autoconf.el, the comment-start-skip need
     ;; make sure its first parenthesized expression match the string exactly before
     ;; the "dnl", check the comment-start-skip in lisp-mode for sample.
