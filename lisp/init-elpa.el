@@ -73,12 +73,13 @@ But you may use safer HTTPS instead.")
         ;; ("gnu" . "https://elpa.gnu.org/packages/")
         ;; ("org" . "http://orgmode.org/elpa/") ; latest org-mode
         ("localelpa" . "~/.emacs.d/localelpa/")
-        ("my-js2-mode" . "https://raw.githubusercontent.com/redguardtoo/js2-mode/release/")
-        ;("melpa" . "https://melpa.org/packages/")
+        ;("my-js2-mode" . "https://raw.githubusercontent.com/redguardtoo/js2-mode/release/")
+        ;;("melpa" . "https://melpa.org/packages/")
         ("melpa" . "https://mirrors.tuna.tsinghua.edu.cn/elpa/melpa/")
-                                        ;("melpa-stable" . "https://stable.melpa.org/packages/")))
+                                        ;;("melpa-stable" . "https://stable.melpa.org/packages/")))
         ("melpa-stable" . "https://mirrors.tuna.tsinghua.edu.cn/elpa/melpa-stable/")
-        ("org" . "https://mirrors.tuna.tsinghua.edu.cn/elpa/org/")))
+        ("org" . "https://mirrors.tuna.tsinghua.edu.cn/elpa/org/")
+        ))
 
 ;; Un-comment below line if your extract https://github.com/redguardtoo/myelpa/archive/master.zip into ~/myelpa/
 ;; (setq package-archives '(("myelpa" . "~/myelpa")))
