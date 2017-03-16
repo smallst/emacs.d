@@ -138,6 +138,7 @@
   (require 'init-dot-mode)
   (require 'init-org2jekyll)
   (require 'init-auctex)
+  (eval-after-load 'flymake '(require 'flymake-cursor))
   (require 'ox-bibtex)
   (require 'init-go-mode)
   (require 'init-lsl-mode)

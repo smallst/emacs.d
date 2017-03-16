@@ -63,6 +63,7 @@ But you may use safer HTTPS instead.")
     ;let-alist
     zeal-at-point
     graphviz-dot-mode
+    cpputils-cmake
     company-c-headers)
   "Don't install any Melpa packages except these packages")
 
