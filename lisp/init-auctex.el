@@ -19,5 +19,8 @@
 (add-hook 'TeX-after-compilation-finished-functions
         #'TeX-revert-document-buffer)
 (add-hook 'TeX-mode-hook 'my-zathura-hook)
+(add-hook 'TeX-mode-hook
+          (lambda ()
+            (setq TeX-command-extra-options "-shell-escape")))
 (add-hook 'LaTeX-mode-hook 'turn-on-cdlatex)
 (provide 'init-auctex)
