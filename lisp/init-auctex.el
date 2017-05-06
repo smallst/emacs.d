@@ -16,6 +16,10 @@
 ;                             (setq TeX-command-default "XeLaTeX")
 ;))
 (setq-default TeX-engine 'xetex)
+(setq reftex-plug-into-AUCTeX t)
+(setq TeX-parse-self t) ; Enable parse on load.
+(setq TeX-auto-save t) ; Enable parse on save.
+(setq TeX-save-query nil)
 (add-hook 'TeX-after-compilation-finished-functions
         #'TeX-revert-document-buffer)
 (add-hook 'TeX-mode-hook 'my-zathura-hook)
