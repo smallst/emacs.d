@@ -105,13 +105,13 @@
 (setq ffip-diff-backends '(my-git-show-selected-commit
                            my-git-diff-current-file
                            ;; `git log -p' current file
-                           (shell-command-to-string (format "cd $(git rev-parse --show-toplevel) && git --no-pager log --date=short -p '%s'"
-                                                            (buffer-file-name)))
-                           "cd $(git rev-parse --show-toplevel) && git diff"
-                           "cd $(git rev-parse --show-toplevel) && git diff --cached"
-                           (shell-command-to-string (format "cd $(git rev-parse --show-toplevel) && git --no-pager log --date=short -S'%s' -p"
-                                                            (read-string "Git search string:")))
-                           (car kill-ring)))
+                           ("git diff" . "cd $(git rev-parse --show-toplevel) && git diff")
+                           ("git diff --cached" . "cd $(git rev-parse --show-toplevel) && git diff --cached")
+                           ("git log -p" . (shell-command-to-string (format "cd $(git rev-parse --show-toplevel) && git --no-pager log --date=short -p '%s'"
+                                                                            (buffer-file-name))))
+                           ("git log -Sstring -p" . (shell-command-to-string (format "cd $(git rev-parse --show-toplevel) && git --no-pager log --date=short -S'%s' -p"
+                                                            (read-string "Git search string:"))))
+                           ("diff from `kill-ring'" . (car kill-ring))))
 
 (defun neotree-project-dir ()
   "Open NeoTree using the git root."
@@ -720,7 +720,7 @@ If step is -1, go backward."
     (copy-yank-str str)
     (message "%s => clipboard & yank ring" str)))
 
-(defun pabs()
+(defun my-insert-absolute-path()
   "Relative path to full path."
   (interactive)
   (let* ((str (my-use-selected-string-or-ask "Input relative path:"))
@@ -728,7 +728,7 @@ If step is -1, go backward."
     (copy-yank-str path)
     (message "%s => clipboard & yank ring" path)))
 
-(defun prel()
+(defun my-insert-relative-path()
   "Full path to relative path."
   (interactive)
   (let* ((str (my-use-selected-string-or-ask "Input absolute path:"))
