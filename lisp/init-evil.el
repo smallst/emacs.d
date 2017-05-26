@@ -49,6 +49,16 @@
   (push '(91 . ("[" . "]")) evil-surround-pairs-alist)
   (push '(93 . ("[" . "]")) evil-surround-pairs-alist))
 (add-hook 'prog-mode-hook 'evil-surround-prog-mode-hook-setup)
+
+(defun evil-surround-js-mode-hook-setup ()
+  ;; ES6
+  (push '(?1 . ("{`" . "`}")) evil-surround-pairs-alist)
+  (push '(?2 . ("${" . "}")) evil-surround-pairs-alist)
+  (push '(?4 . ("(e) => " . "(e)")) evil-surround-pairs-alist)
+  ;; ReactJS
+  (push '(?3 . ("classNames(" . ")")) evil-surround-pairs-alist))
+(add-hook 'js-mode-hook 'evil-surround-js-mode-hook-setup)
+
 (defun evil-surround-emacs-lisp-mode-hook-setup ()
   (push '(?` . ("`" . "'")) evil-surround-pairs-alist))
 (add-hook 'emacs-lisp-mode-hook 'evil-surround-emacs-lisp-mode-hook-setup)
@@ -390,6 +400,7 @@ If the character before and after CH is space or tab, CH is NOT slash"
        "ff" 'toggle-full-window ;; I use WIN+F in i3
        "ip" 'find-file-in-project
        "kk" 'find-file-in-project-by-selected
+       "kn" 'find-file-with-similar-name ; ffip v5.3.1
        "fd" 'find-directory-in-project-by-selected
        "trm" 'get-term
        "tff" 'toggle-frame-fullscreen
@@ -642,6 +653,16 @@ If the character before and after CH is space or tab, CH is NOT slash"
                     "jba" 'js2r-forward-barf
                     "jk" 'js2r-kill)
 ;; }}
+
+;; Press `dd' to delete lines in `wgrep-mode' in evil directly
+(defadvice evil-delete (around evil-delete-hack activate)
+  ;; make buffer writable
+  (if (and (boundp 'wgrep-prepared) wgrep-prepared)
+      (wgrep-toggle-readonly-area))
+  ad-do-it
+  ;; make buffer read-only
+  (if (and (boundp 'wgrep-prepared) wgrep-prepared)
+      (wgrep-toggle-readonly-area)))
 
 ;; {{ Use `;` as leader key, for searching something
 (nvmap :prefix ";"
