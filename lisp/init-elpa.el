@@ -273,6 +273,8 @@ But you may use safer HTTPS instead.")
 (require-package 'quack) ; for scheme
 (require-package 'hydra)
 (require-package 'chinese-pyim)
+(require-package 'web-mode)
+(require-package 'emms)
 (require-package 'ox-reveal)
 (require-package 'org2jekyll)
 (require-package 'protobuf-mode)
