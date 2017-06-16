@@ -275,15 +275,23 @@ If the character before and after CH is space or tab, CH is NOT slash"
 (evil-declare-key 'normal org-mode-map
   "gh" 'outline-up-heading
   "gl" 'outline-next-visible-heading
+  "gj" 'outline-forward-same-level
+  "gk" 'outline-backward-same-level
   "$" 'org-end-of-line ; smarter behaviour on headlines etc.
   "^" 'org-beginning-of-line ; ditto
   "<" (lambda () (interactive) (org-demote-or-promote 1)) ; out-dent
   ">" 'org-demote-or-promote ; indent
   (kbd "TAB") 'org-cycle)
 
+(evil-declare-key 'normal markdown-mode-map
+  "gh" 'outline-up-heading
+  "gl" 'outline-next-visible-heading
+  "gj" 'outline-forward-same-level
+  "gk" 'outline-backward-same-level
+  (kbd "TAB") 'org-cycle)
+
 (loop for (mode . state) in
       '((minibuffer-inactive-mode . emacs)
-        (ggtags-global-mode . emacs)
         (grep-mode . emacs)
         (Info-mode . emacs)
         (term-mode . emacs)
@@ -513,8 +521,9 @@ If the character before and after CH is space or tab, CH is NOT slash"
        "hf" 'find-function
        "hk" 'describe-key
        "hv" 'describe-variable
-       "gt" 'ggtags-find-tag-dwim
-       "gr" 'ggtags-find-reference
+       "gt" 'counsel-gtags-dwim ; jump from reference to definition or vice versa
+       "gr" 'counsel-gtags-find-symbol
+       "gu" 'counsel-gtags-update-tags
        "fb" 'flyspell-buffer
        "fe" 'flyspell-goto-next-error
        "fa" 'flyspell-auto-correct-word
@@ -615,7 +624,7 @@ If the character before and after CH is space or tab, CH is NOT slash"
        "ms" 'mc/skip-to-next-like-this
        "me" 'mc/edit-lines)
 
-;; per-major-mode leader setup
+;; per-major-mode setup
 (general-define-key :states '(normal motion insert emacs)
                     :keymaps 'js2-mode-map
                     :prefix "SPC"
