@@ -10,6 +10,7 @@ But you may use safer HTTPS instead.")
 (defvar melpa-include-packages
   '(ace-mc
     bbdb
+    dumb-jump
     color-theme
     js-doc
     ;; {{ since stable v0.9.1 released, we go back to stable version
@@ -266,7 +267,6 @@ But you may use safer HTTPS instead.")
 (require-package 'company-c-headers)
 (require-package 'legalese)
 (require-package 'simple-httpd)
-(require-package 'git-messenger)
 ;; (require-package 'git-gutter) ; use my patched version
 (require-package 'flx-ido)
 (require-package 'neotree)
@@ -275,6 +275,7 @@ But you may use safer HTTPS instead.")
 (require-package 'hydra)
 (require-package 'chinese-pyim)
 (require-package 'web-mode)
+(require-package 'dumb-jump)
 (require-package 'emms)
 (require-package 'ox-reveal)
 (require-package 'org2jekyll)

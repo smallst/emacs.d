@@ -433,11 +433,9 @@ If the character before and after CH is space or tab, CH is NOT slash"
        "mm" 'counsel-bookmark-goto
        "mk" 'bookmark-set
        "yy" 'counsel-browse-kill-ring
-       "gf" 'counsel-git-find-file
-       "gc" 'counsel-git-find-file-committed-with-line-at-point
+       "gf" 'counsel-git ; find file
        "gl" 'counsel-git-grep-yank-line
-       "gg" 'counsel-git-grep-in-project ; quickest grep should be easy to press
-       "ga" 'counsel-git-grep-by-author
+       "gg" 'counsel-git-grep-by-selected ; quickest grep should be easy to press
        "gm" 'counsel-git-find-my-file
        "gs" 'ffip-show-diff ; find-file-in-project 5.0+
        "gd" 'ffip-show-diff-by-description ;find-file-in-project 5.3.0+
@@ -457,12 +455,14 @@ If the character before and after CH is space or tab, CH is NOT slash"
        "lq" 'highlight-symbol-query-replace
        "ln" 'highlight-symbol-nav-mode ; use M-n/M-p to navigation between symbols
        "bm" 'pomodoro-start ;; beat myself
-       "ii" 'counsel-imenu-goto
+       "ii" 'counsel-imenu
        "ij" 'rimenu-jump
        "." 'evil-ex
        ;; @see https://github.com/pidu/git-timemachine
        ;; p: previous; n: next; w:hash; W:complete hash; g:nth version; q:quit
-       "tt" 'my-git-timemachine
+       "tt" 'dumb-jump-go
+       "tb" 'dumb-jump-back
+       "tm" 'my-git-timemachine
        "tdb" 'tidy-buffer
        "tdl" 'tidy-current-line
        ;; toggle overview,  @see http://emacs.wordpress.com/2007/01/16/quick-and-dirty-code-folding/
@@ -480,7 +480,7 @@ If the character before and after CH is space or tab, CH is NOT slash"
        "cap" 'org-capture
        "qq" 'my-grep
        "xc" 'save-buffers-kill-terminal
-       "rr" 'counsel-recentf-goto
+       "rr" 'counsel-recentf
        "rh" 'counsel-yank-bash-history ; bash history command => yank-ring
        "rf" 'counsel-goto-recent-directory
        "da" 'diff-region-tag-selected-as-a
@@ -573,7 +573,7 @@ If the character before and after CH is space or tab, CH is NOT slash"
        "vs" 'git-gutter:stage-hunk
        "vr" 'git-gutter:revert-hunk
        "vl" 'vc-print-log
-       "vv" 'git-messenger:popup-message
+       "vv" 'vc-msg-show
        "v=" 'git-gutter:popup-hunk
        "hh" 'cliphist-paste-item
        "yu" 'cliphist-select-item

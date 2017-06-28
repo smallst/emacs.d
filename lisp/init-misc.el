@@ -688,7 +688,7 @@ If no region is selected. You will be asked to use `kill-ring' or clipboard inst
                       (car kill-ring))
                      ((string= choice "clipboard")
                       (unless (featurep 'simpleclip) (require 'simpleclip))
-                      (simpleclip-get-contents)))))
+                      (my-gclip)))))
           (with-temp-file fb
             (insert txt)))))
       ;; save region A as file A
@@ -847,6 +847,11 @@ If no region is selected. You will be asked to use `kill-ring' or clipboard inst
 
 ;; }}
 
+;; @see https://stackoverflow.com/questions/3417438/closing-all-other-buffers-in-emacs
+(defun kill-all-but-current-buffer ()
+  (interactive)
+    (mapc 'kill-buffer (cdr (buffer-list (current-buffer)))))
+
 (defun minibuffer-inactive-mode-hook-setup ()
   ;; make `try-expand-dabbrev' from `hippie-expand' work in mini-buffer
   ;; @see `he-dabbrev-beg', so we need re-define syntax for '/'
@@ -854,4 +859,9 @@ If no region is selected. You will be asked to use `kill-ring' or clipboard inst
                       (modify-syntax-entry ?/ "." table)
                       table)))
 (add-hook 'minibuffer-inactive-mode-hook 'minibuffer-inactive-mode-hook-setup)
+
+;; {{ dumb-jump
+(setq dumb-jump-selector 'ivy)
+(dumb-jump-mode)
+;; }}
 (provide 'init-misc)
