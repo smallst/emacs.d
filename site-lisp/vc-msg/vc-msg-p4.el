@@ -29,26 +29,29 @@
 (defvar vc-msg-p4-program "p4")
 
 (defvar vc-msg-p4-file-to-url nil
-  "(car p4-file-to-url) is the original file prefix.
-(cadr p4-file-to-url) is the url prefix.
+  "Please note (car vc-msg-p4-file-to-url) is the original file prefix.
+And (cadr vc-msg-p4-file-to-url) is the url prefix.
 Please note it supports regular expression.
-It's used to convert a local file path to peforce URL.
+It's used to convert a local file path to Perforce URL.
 If you use Windows version p4 in Cygwin Emacs, or Cygwin
-version p4 in Window Emacs. You need to convert the path
+version p4 in Windows Emacs, you need convert the path
 to URL.")
 
 (defun vc-msg-p4-generate-cmd (opts)
+  "Generate Perforce CLI from OPTS."
   (format "%s %s" vc-msg-p4-program opts))
 
 (defun vc-msg-p4-anonate-output (cmd)
+  "Run CMD in shell."
   (shell-command-to-string cmd))
 
 (defun vc-msg-p4-changelist-output (id)
+  "Get the information about ID."
   (let* ((cmd (vc-msg-p4-generate-cmd (format "change -o %s" id))))
     (shell-command-to-string cmd)))
 
 ;;;###autoload
-(defun vc-msg-p4-execute (file line-num &optional extra)
+(defun vc-msg-p4-execute (file line-num)
   "Use FILE and LINE-NUM to produce p4 command.
 Parse the command execution output and return a plist:
 '(:id str :author str :date str :message str)."
@@ -87,6 +90,7 @@ Parse the command execution output and return a plist:
 
 ;;;###autoload
 (defun vc-msg-p4-format (info)
+  "Format the INFO into a string."
   (let* ((author (plist-get info :author)))
     (cond
      ((string-match-p "Not Committed Yet" author)
@@ -97,6 +101,21 @@ Parse the command execution output and return a plist:
               author
               (plist-get info :author-time)
               (plist-get info :summary))))))
+
+(defun vc-msg-p4-show-code ()
+  "Show code."
+  (let* ((info vc-msg-previous-commit-info)
+         (cmd (vc-msg-p4-generate-cmd (format "describe -du %s" (plist-get info :id)))))
+    (vc-msg-sdk-get-or-create-buffer
+     "vs-msg"
+     (shell-command-to-string cmd))))
+
+(defvar vc-msg-p4-extra
+  '(("c" "[c]ode" vc-msg-p4-show-code))
+  "Extra keybindings/commands used by `vc-msg-map'.
+An example:
+'((\"c\" \"[c]ode\" (lambda (message info))
+  (\"d\" \"[d]iff\" (lambda (message info))))")
 
 (provide 'vc-msg-p4)
 ;;; vc-msg-p4.el ends here

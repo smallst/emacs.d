@@ -29,17 +29,20 @@
 (defvar vc-msg-svn-program "svn")
 
 (defun vc-msg-svn-generate-cmd (opts)
+  "Generate Subversion CLI from OPTS."
   (format "LANG=C %s %s" vc-msg-svn-program opts))
 
 (defun vc-msg-svn-blame-output (cmd)
+  "Generate blame output by running CMD in shell."
   (shell-command-to-string cmd))
 
 (defun vc-msg-svn-changelist-output (id)
+  "Generate commit information from ID."
   (let* ((cmd (vc-msg-svn-generate-cmd (format "log -r %s" id))))
     (shell-command-to-string cmd)))
 
 ;;;###autoload
-(defun vc-msg-svn-execute (file line-num &optional extra)
+(defun vc-msg-svn-execute (file line-num)
   "Use FILE and LINE-NUM to produce svn command.
 Parse the command execution output and return a plist:
 '(:id str :author str :date str :message str)."
@@ -84,12 +87,28 @@ Parse the command execution output and return a plist:
 
 ;;;###autoload
 (defun vc-msg-svn-format (info)
+  "Format the message to display from INFO."
   (format "Commit: %s\nAuthor: %s\nDate: %s\nTimezone: %s\n\n%s"
           (plist-get info :id)
           (plist-get info :author)
           (plist-get info :author-time)
           (vc-msg-sdk-format-timezone (plist-get info :author-tz))
           (plist-get info :summary)))
+
+(defun vc-msg-svn-show-code ()
+  "Show code."
+  (let* ((info vc-msg-previous-commit-info)
+         (cmd (vc-msg-svn-generate-cmd (format "diff --internal-diff -c %s" (plist-get info :id)))))
+    (vc-msg-sdk-get-or-create-buffer
+     "vs-msg"
+     (shell-command-to-string cmd))))
+
+(defvar vc-msg-svn-extra
+  '(("c" "[c]ode" vc-msg-svn-show-code))
+  "Extra keybindings/commands used by `vc-msg-map'.
+An example:
+'((\"c\" \"[c]ode\" (lambda (message info))
+  (\"d\" \"[d]iff\" (lambda (message info))))")
 
 (provide 'vc-msg-svn)
 ;;; vc-msg-svn.el ends here
