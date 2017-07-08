@@ -383,7 +383,7 @@ If the character before and after CH is space or tab, CH is NOT slash"
        "em" 'erase-message-buffer
        "eb" 'eval-buffer
        "sd" 'sudo-edit
-       "sc" 'shell-command
+       "sc" 'scratch
        "ee" 'eval-expression
        "aa" 'copy-to-x-clipboard ; used frequently
        "aw" 'ace-swap-window
@@ -395,6 +395,7 @@ If the character before and after CH is space or tab, CH is NOT slash"
        "bs" '(lambda () (interactive) (goto-edge-by-comparing-font-face -1))
        "es" 'goto-edge-by-comparing-font-face
        "vj" 'my-validate-json-or-js-expression
+       "kc" 'kill-ring-to-clipboard
        "mcr" 'my-create-regex-from-kill-ring
        "ntt" 'neotree-toggle
        "ntf" 'neotree-find ; open file in current buffer in neotree
@@ -593,6 +594,7 @@ If the character before and after CH is space or tab, CH is NOT slash"
 ;; all keywords arguments are still supported
 (nvmap :prefix "SPC"
        "ss" 'wg-create-workgroup ; save windows layout
+       "sc" 'shell-command
        "ll" 'my-wg-switch-workgroup ; load windows layout
        "kk" 'scroll-other-window
        "jj" 'scroll-other-window-up
