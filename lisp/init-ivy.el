@@ -95,10 +95,8 @@ Yank the file name at the same time.  FILTER is function to filter the collectio
 (defvar counsel-complete-line-use-git t)
 
 (defun counsel-find-quickest-grep ()
-  (let* ((exe (or (executable-find "rg") (executable-find "ag"))))
-    ;; ripgrep says that "-n" is enabled actually not,
-    ;; so we manually add it
-    (if exe (concat exe " -n"))))
+  ;; on debian ag v0.26.0 does not support "-n" option
+  (executable-find "ag"))
 
 (defun counsel-complete-line-by-grep ()
   "Complete line using text from (line-beginning-position) to (point).
@@ -260,6 +258,7 @@ Or else, find files since 24 weeks (6 months) ago."
 (defvar my-grep-opts-cache '())
 
 (defun my-grep-exclude-opts (use-cache)
+  ;; (message "my-grep-exclude-opts called => %s" use-cache)
   (let* ((ignore-dirs (if use-cache (plist-get my-grep-opts-cache :ignore-dirs)
                         my-grep-ignore-dirs))
          (ignore-file-exts (if use-cache (plist-get my-grep-opts-cache :ignore-file-exts)
@@ -267,20 +266,10 @@ Or else, find files since 24 weeks (6 months) ago."
          (ignore-file-names (if use-cache (plist-get my-grep-opts-cache :ignore-file-names)
                               my-grep-ignore-file-names)))
     (cond
-     ((executable-find "rg")
-      (concat "-s --no-heading "
-              (mapconcat (lambda (e) (format "-g='!%s/*'" e))
-                         ignore-dirs " ")
-              " "
-              (mapconcat (lambda (e) (format "-g='!*.%s'" e))
-                         ignore-file-exts " ")
-              " "
-              (mapconcat (lambda (e) (format "-g='!%s'" e))
-                         ignore-file-names " ")))
      ((executable-find "ag")
-      (concat "-s --nocolor --nogroup --silent "
+      (concat "-s --nocolor --nogroup --silent -z " ; -z to grep *.gz
               (mapconcat (lambda (e) (format "--ignore-dir='%s'" e))
-                         my-grep-ignore-dirs " ")
+                         ignore-dirs " ")
               " "
               (mapconcat (lambda (e) (format "--ignore='*.%s'" e))
                          ignore-file-exts " ")
@@ -289,7 +278,7 @@ Or else, find files since 24 weeks (6 months) ago."
                          ignore-file-names " ")))
      (t
       (concat (mapconcat (lambda (e) (format "--exclude-dir='%s'" e))
-                         my-grep-ignore-dirs " ")
+                         ignore-dirs " ")
               " "
               (mapconcat (lambda (e) (format "--exclude='*.%s'" e))
                          ignore-file-exts " ")
@@ -353,8 +342,8 @@ Or else, find files since 24 weeks (6 months) ago."
 (defun ivy-occur-grep-mode-hook-setup ()
   ;; no syntax highlight, I only care performance when searching/replacing
   (font-lock-mode -1)
-  ;; no truncate line, unnecessary calculation
-  (setq truncate-lines nil)
+  ;; @see https://emacs.stackexchange.com/questions/598/how-do-i-prevent-extremely-long-lines-making-emacs-slow
+  (column-number-mode -1)
   ;; turn on wgrep right now
   ;; (ivy-wgrep-change-to-wgrep-mode) ; doesn't work, don't know why
   )
@@ -364,7 +353,7 @@ Or else, find files since 24 weeks (6 months) ago."
 (defvar my-grep-debug nil)
 (defun my-grep ()
   "Grep at project root directory or current directory.
-Try to find best grep program (ripgrep, the silver searcher, grep...) automatically.
+Try to find best grep program (the silver searcher, grep...) automatically.
 Extended regex like (pattern1|pattern2) is used."
   (interactive)
   (let* ((keyword (counsel-read-keyword "Enter grep pattern: "))
@@ -373,10 +362,10 @@ Extended regex like (pattern1|pattern2) is used."
          (dir (if my-grep-show-full-directory (my-root-dir)
                 (file-name-as-directory (file-name-base (directory-file-name (my-root-dir)))))))
 
-    (plist-put my-grep-opts-cache :ignore-dirs my-grep-ignore-dirs)
-    (plist-put my-grep-opts-cache :ignore-file-exts my-grep-ignore-file-exts)
-    (plist-put my-grep-opts-cache :ignore-file-names my-grep-ignore-file-names)
-    (message "my-grep-opts-cache=%s" my-grep-opts-cache)
+    (setq my-grep-opts-cache (plist-put my-grep-opts-cache :ignore-dirs my-grep-ignore-dirs))
+    (setq my-grep-opts-cache (plist-put my-grep-opts-cache :ignore-file-exts my-grep-ignore-file-exts))
+    (setq my-grep-opts-cache (plist-put my-grep-opts-cache :ignore-file-names my-grep-ignore-file-names))
+    ;; (message "my-grep-opts-cache=%s" my-grep-opts-cache)
 
     (ivy-read (format "matching \"%s\" at %s:" keyword dir)
               collection
