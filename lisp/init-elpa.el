@@ -286,5 +286,6 @@ But you may use safer HTTPS instead.")
 (require-package 'graphviz-dot-mode)
 ;(require-package 'flymake-go)
 (require-package 'package-lint) ; lint package before submit it to MELPA
+(require-package 'iedit)
 
 (provide 'init-elpa)
