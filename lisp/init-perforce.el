@@ -26,6 +26,16 @@
   (shell-command (p4-generate-cmd "edit"))
   (read-only-mode -1))
 
+(defun p4-edit-file-and-make-buffer-writable(file)
+  "p4 edit FILE and make corresponding buffer writable."
+  (shell-command (format "p4 edit %s" (p4-convert-file-to-url file)))
+  ;; make sure the buffer is readable
+  (let* ((buf (get-file-buffer file)))
+    (if buf
+        (with-current-buffer buf
+          ;; turn off read-only since we've already `p4 edit'
+          (read-only-mode -1)))))
+
 (defun p4submit (&optional file-opened)
   "p4 submit current file.
 If FILE-OPENED, current file is still opened."
@@ -187,6 +197,8 @@ If IN-PROJECT is t, operate in project root."
                                            (ffip-project-root))))))
 
 (defun p4edit-in-wgrep-buffer()
+  "'p4 edit' files in wgrep buffer.
+Turn off `read-only-mode' of opened files."
   (interactive)
   (save-restriction
     (let* ((start (wgrep-goto-first-found))

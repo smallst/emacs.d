@@ -397,11 +397,6 @@ See \"Reusing passwords for several connections\" from INFO.
   (add-hook 'messages-buffer-mode-hook 'messages-buffer-mode-hook-setup))
 ;; }}
 
-;; increase and decrease font size in GUI emacs
-(when (display-graphic-p)
-  (global-set-key (kbd "C-=") 'text-scale-increase)
-  (global-set-key (kbd "C--") 'text-scale-decrease))
-
 ;; vimrc
 (add-to-list 'auto-mode-alist '("\\.?vim\\(rc\\)?$" . vimrc-mode))
 
@@ -872,6 +867,14 @@ If no region is selected. You will be asked to use `kill-ring' or clipboard inst
   ;; copy commit id to clipboard
   (my-pclip (plist-get commit-info :id)))
 (add-hook 'vc-msg-hook 'vc-msg-hook-setup)
+
+(defun vc-msg-show-code-setup ()
+  ;; use `ffip-diff-mode' from package find-file-in-project instead of `diff-mode'
+  (unless (featurep 'find-file-in-project)
+    (require 'find-file-in-project))
+  (ffip-diff-mode))
+
+  (add-hook 'vc-msg-show-code-hook 'vc-msg-show-code-setup)
 ;; }}
 
 (provide 'init-misc)
