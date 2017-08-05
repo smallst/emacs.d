@@ -4,8 +4,8 @@
   (interactive)
 
   ;; load IME when needed, less memory footprint
-  (unless (featurep 'chinese-pyim)
-    (require 'chinese-pyim))
+  (unless (featurep 'pyim)
+    (require 'pyim))
 
   ;; some guy don't use evil-mode at all
   (cond
@@ -60,21 +60,21 @@
     (if my-pyim-directory
         (write-file (my-pyim-personal-dict)))))
 
-(eval-after-load 'chinese-pyim
+(eval-after-load 'pyim
   '(progn
      ;; I'm OK with a smaller dictionary
-     (chinese-pyim-basedict-enable)
+     (pyim-basedict-enable)
      ;; use western punctuation (ban jiao fu hao)
      ;; (setq pyim-punctuation-dict nil)
      ;; always input English when isearch
      (setq pyim-isearch-enable-pinyin-search t)
-     (setq default-input-method "chinese-pyim")
+     (setq default-input-method "pyim")
      ;; re-order backends, I prefer less typing
-     (setq pyim-backends '(pinyin-shortcode
-                           pinyin-znabc
-                           dcache-personal
-                           dcache-common
-                           pinyin-chars))
+     ;; (setq pyim-backends '(pinyin-shortcode
+     ;;                       pinyin-znabc
+     ;;                       dcache-personal
+     ;;                       dcache-common
+     ;;                       pinyin-chars))
      ;; use personal dictionary
      (if (and my-pyim-directory
               (file-exists-p (my-pyim-personal-dict)))

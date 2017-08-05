@@ -62,6 +62,7 @@ But you may use safer HTTPS instead.")
     workgroups2
     ox-reveal
     flymake-go
+    pyim-basedict
     ;helm-bibtex
     ;biblio
     ;biblio-core
@@ -268,7 +269,8 @@ But you may use safer HTTPS instead.")
 (require-package 'define-word)
 (require-package 'quack) ; for scheme
 (require-package 'hydra)
-(require-package 'chinese-pyim)
+;; (require-package 'chinese-pyim)
+(require-package 'pyim)
 (require-package 'web-mode)
 (require-package 'dumb-jump)
 (require-package 'emms)
