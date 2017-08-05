@@ -32,7 +32,7 @@
 
 (defvar my-pyim-directory
   "~/.eim"
-  "There directory of peronsal dictionaries for chinese-pyim.")
+  "There directory of peronsal dictionaries for pyim.")
 
 (add-to-list 'auto-mode-alist '("\\.pyim\\'" . text-mode))
 
@@ -41,7 +41,7 @@
                          (or dict-name "personal.pyim"))))
 
 (defun my-pyim-export-dictionary ()
-  "Export words you use in chinese-pyim into personal dictionary."
+  "Export words you use in pyim into personal dictionary."
   (interactive)
   (with-temp-buffer
     (maphash
@@ -65,16 +65,10 @@
      ;; I'm OK with a smaller dictionary
      (pyim-basedict-enable)
      ;; use western punctuation (ban jiao fu hao)
-     ;; (setq pyim-punctuation-dict nil)
+     (setq pyim-punctuation-dict nil)
      ;; always input English when isearch
      (setq pyim-isearch-enable-pinyin-search t)
      (setq default-input-method "pyim")
-     ;; re-order backends, I prefer less typing
-     ;; (setq pyim-backends '(pinyin-shortcode
-     ;;                       pinyin-znabc
-     ;;                       dcache-personal
-     ;;                       dcache-common
-     ;;                       pinyin-chars))
      ;; use personal dictionary
      (if (and my-pyim-directory
               (file-exists-p (my-pyim-personal-dict)))
