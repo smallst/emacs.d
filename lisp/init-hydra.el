@@ -2,32 +2,35 @@
 
 ;; use similar key bindings as init-evil.el
 (defhydra hydra-launcher (:color blue)
-  "?"
-  ("mq" lookup-doc-in-man "man")
-  ("mk" bookmark-set "New bmark")
-  ("mm" counsel-bookmark-goto "Go bmark")
-  ("rr" my-counsel-recentf "Recent file")
-  ("ss" wg-create-workgroup "New layout")
-  ("ll" my-wg-switch-workgroup "Load layout")
-  ("tr" ansi-term "Term")
-  ("pp" toggle-company-ispell "Ispell input")
-  ("gg" w3m-google-search "Srch")
-  ("gf" w3m-google-by-filetype "Srch by File Ext")
-  ("gd" w3m-search-financial-dictionary "Financial Dict")
-  ("gq" w3m-stackoverflow-search "StackOverflow")
-  ("gj" w3m-search-js-api-mdn "JS API")
-  ("ga" w3m-java-search "Java")
-  ("gh" w3mext-hacker-search "Code search")
-  ("db" sdcv-search-pointer "Stardict buffer")
-  ("dt" sdcv-search-input+  "Stardict tooltip")
-  ("dd" my-lookup-dict-org "Lookup dict.org")
-  ("dw" define-word "Lookup word")
-  ("dp" define-word-at-point "Lookup on spot")
-  ("q" nil "Bye"))
+  "
+^Emms^       ^Misc^
+-------------------------------
+_r_andom     _t_erm
+_n_ext       _a_utoComplete
+_p_revious   _s_ave workgroup
+_P_ause      _l_oad workgroup
+_O_pen       _b_ookmark
+_L_ Playlist Goto book_m_ark
+_q_uit
+"
+  ("b" bookmark-set)
+  ("m" counsel-bookmark-goto)
+  ("r" my-counsel-recentf)
+  ("s" wg-create-workgroup)
+  ("l" my-wg-switch-workgroup)
+  ("t" ansi-term)
+  ("a" toggle-company-ispell)
+  ("r" emms-random)
+  ("n" emms-next)
+  ("p" emms-previous)
+  ("P" emms-pause)
+  ("O" emms-play-playlist)
+  ("L" emms-playlist-mode-go)
+  ("q" nil))
 
 (defhydra multiple-cursors-hydra (:color green :hint nil)
   "
-     ^Up^            ^Down^        ^Other^
+^Up^            ^Down^          ^Other^
 ----------------------------------------------
 [_p_]   Next    [_n_]   Next    [_l_] Edit lines
 [_P_]   Skip    [_N_]   Skip    [_a_] Mark all
@@ -153,7 +156,7 @@
 ;; @see https://oremacs.com/download/london.pdf
 (when (display-graphic-p)
   (defhydra hydra-zoom (global-map "C-c")
-    "zoom"
+    "Zoom"
     ("g" text-scale-increase "in")
     ("l" text-scale-decrease "out")
     ("r" (text-scale-set 0) "reset")
@@ -267,5 +270,44 @@ Git gutter:
    :color blue))
 (global-set-key (kbd "C-c C-g") 'hydra-git-gutter/body)
 ;; }}
+
+(defhydra hydra-search ()
+  "
+Dictionary^^         ^Search text^
+---------------------------------
+_b_ sdcv at point    _;_ 2 chars
+_t_ sdcv input       _w_ (sub)word
+_d_ dict.org         _a_ any chars
+_g_ Google
+_c_ current file ext
+_f_ Finance
+_q_ StackOverflow
+_j_ Javascript API
+_a_ Java
+_h_ Code
+_m_ Man
+_q_ cancel
+"
+  ("b" sdcv-search-pointer)
+  ("t" sdcv-search-input+)
+  ("d" my-lookup-dict-org)
+  ("g" w3m-google-search)
+  ("c" w3m-google-by-filetype)
+  ("f" w3m-search-financial-dictionary)
+  ("q" w3m-stackoverflow-search)
+  ("j" w3m-search-js-api-mdn)
+  ("a" w3m-java-search)
+  ("h" w3mext-hacker-search)
+  ("m" lookup-doc-in-man)
+
+  (";" avy-goto-char-2 )
+  ("w" avy-goto-word-or-subword-1 )
+  ("a" avy-goto-char-timer )
+
+  ("q" nil))
+(global-set-key (kbd "C-c ;") 'hydra-search/body)
+;; (global-set-key (kbd "C-c ; b") 'sdcv-search-pointer)
+;; (global-set-key (kbd "C-c ; t") 'sdcv-search-input+)
+
 (provide 'init-hydra)
 ;;; init-hydra.el ends here

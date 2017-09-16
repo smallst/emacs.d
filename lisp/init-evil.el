@@ -500,8 +500,10 @@ If the character before and after CH is space or tab, CH is NOT slash"
        "xe" 'eval-last-sexp
        "x0" 'delete-window
        "x1" 'delete-other-windows
-       "x2" 'split-window-vertically
-       "x3" 'split-window-horizontally
+       "x2" 'my-split-window-vertically
+       "x3" 'my-split-window-horizontally
+       "s2" 'ffip-split-window-vertically
+       "s3" 'ffip-split-window-horizontally
        "rw" 'rotate-windows
        "ru" 'undo-tree-save-state-to-register ; C-x r u
        "rU" 'undo-tree-restore-state-from-register ; C-x r U
@@ -536,7 +538,7 @@ If the character before and after CH is space or tab, CH is NOT slash"
        "ne" 'flymake-goto-next-error
        "fw" 'ispell-word
        "bc" '(lambda () (interactive) (wxhelp-browse-class-or-api (thing-at-point 'symbol)))
-       "oag" 'org-agenda
+       "og" 'org-agenda
        "otl" 'org-toggle-link-display
        "oa" '(lambda ()
                (interactive)
@@ -689,12 +691,12 @@ If the character before and after CH is space or tab, CH is NOT slash"
        ;;   '(progn
        ;;      (set-face-attribute 'avy-lead-face-0 nil :foreground "black")
        ;;      (set-face-attribute 'avy-lead-face-0 nil :background "#f86bf3")))
-       ";" 'avy-goto-char-timer
+       ";" 'avy-goto-char-2
+       "w" 'avy-goto-word-or-subword-1
+       "a" 'avy-goto-char-timer
        "db" 'sdcv-search-pointer ; in buffer
        "dt" 'sdcv-search-input+ ; in tip
        "dd" 'my-lookup-dict-org
-       "dw" 'define-word
-       "dp" 'define-word-at-point
        "mm" 'lookup-doc-in-man
        "gg" 'w3m-google-search
        "gf" 'w3m-google-by-filetype
@@ -781,6 +783,11 @@ If the character before and after CH is space or tab, CH is NOT slash"
 ;;  - "gg" the first occurence, "G" the last occurence
 ;;  - Please note ";;" or `avy-goto-char-timer' is also useful
 (require 'evil-iedit-state)
+;; }}
+
+;; {{ Evil’s f/F/t/T commands with Pinyin supptt,
+(require 'evil-find-char-pinyin)
+(evil-find-char-pinyin-mode 1)
 ;; }}
 
 (provide 'init-evil)

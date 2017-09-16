@@ -264,7 +264,6 @@ But you may use safer HTTPS instead.")
 ;; (require-package 'git-gutter) ; use my patched version
 (require-package 'flx-ido)
 (require-package 'neotree)
-(require-package 'define-word)
 (require-package 'quack) ; for scheme
 (require-package 'hydra)
 (require-package 'ivy-hydra) ; @see https://oremacs.com/2015/07/23/ivy-multiaction/
@@ -282,5 +281,7 @@ But you may use safer HTTPS instead.")
 ;(require-package 'flymake-go)
 (require-package 'package-lint) ; lint package before submit it to MELPA
 (require-package 'iedit)
+(require-package 'ace-pinyin)
+(require-package 'org-jira) ; @see https://github.com/ahungry/org-jira
 
 (provide 'init-elpa)
