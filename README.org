@@ -19,7 +19,3 @@ add
 #+BIBLIOGRAPHY: refs plain option:-a
 #+END_EXAMPLE
 use ~C-c C-x [~ for add refrence
->>>>>>> variant B
-You need the section "Install stable version in easiest way" *if and only if*:
-- You are absolutely newbie, knowing nothing about Linux/Unix
-- You are living in North Korea without internet access
