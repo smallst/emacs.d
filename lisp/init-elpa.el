@@ -1,9 +1,6 @@
+;; emacs24 require calling `package-initialize' explicitly
 (require 'package)
-
-;; Set it to `t' to use safer HTTPS to download packages
-(defvar melpa-use-https-repo nil
-  "By default, HTTP is used to download packages.
-But you may use safer HTTPS instead.")
+(package-initialize)
 
 ;; List of VISIBLE packages from melpa-unstable (http://melpa.org)
 ;; Feel free to add more packages!
@@ -22,7 +19,7 @@ But you may use safer HTTPS instead.")
     robe
     groovy-mode
     inf-ruby
-    company ; I won't wait another 2 years for stable
+    ;; company ; I won't wait another 2 years for stable
     simple-httpd
     dsvn
     move-text
@@ -33,6 +30,7 @@ But you may use safer HTTPS instead.")
     counsel-gtags ; the stable version is never released
     noflet
     db
+    package-lint
     creole
     web
     idomenu
@@ -73,24 +71,16 @@ But you may use safer HTTPS instead.")
     company-c-headers)
   "Don't install any Melpa packages except these packages")
 
-;; We include the org repository for completeness, but don't use it.
-;; Lock org-mode temporarily:
 (setq package-archives
       '(;; uncomment below line if you need use GNU ELPA
         ;; ("gnu" . "https://elpa.gnu.org/packages/")
-        ;; ("org" . "http://orgmode.org/elpa/") ; latest org-mode
         ("localelpa" . "~/.emacs.d/localelpa/")
         ;; ("my-js2-mode" . "https://raw.githubusercontent.com/redguardtoo/js2-mode/release/") ; github has some issue
         ("melpa" . "https://melpa.org/packages/")
         ("melpa-stable" . "https://stable.melpa.org/packages/")))
 
-;; Un-comment below line if your extract https://github.com/redguardtoo/myelpa/archive/master.zip into ~/myelpa/
-;; (setq package-archives '(("myelpa" . "~/myelpa")))
-
-;; Or Un-comment below line if you install package from https://github.com/redguardtoo/myelpa/
-;; (setq package-archives '(("myelpa" . "https://raw.github.com/redguardtoo/myelpa/master/")))
-
-
+;; Un-comment below line if you follow "Install stable version in easiest way"
+;; (setq package-archives '(("myelpa" . "~/projs/myelpa")))
 
 ;;------------------------------------------------------------------------------
 ;; Internal implementation, newbies should NOT touch code below this line!
@@ -159,8 +149,6 @@ But you may use safer HTTPS instead.")
 ;; Fire up package.el and ensure the following packages are installed.
 ;;------------------------------------------------------------------------------
 
-(package-initialize)
-
 (require-package 'async)
 (require-package 'dash) ; required by string-edit
 ; color-theme 6.6.1 in elpa is buggy
@@ -214,7 +202,6 @@ But you may use safer HTTPS instead.")
 (require-package 'counsel) ; counsel => swiper => ivy
 (require-package 'find-file-in-project)
 (require-package 'counsel-bbdb)
-(require-package 'elpy)
 (require-package 'hl-sexp)
 (require-package 'ibuffer-vc)
 (require-package 'less-css-mode)
@@ -260,6 +247,7 @@ But you may use safer HTTPS instead.")
 (require-package 'yasnippet)
 (require-package 'company)
 (require-package 'company-c-headers)
+(require-package 'elpy)
 (require-package 'legalese)
 (require-package 'simple-httpd)
 ;; (require-package 'git-gutter) ; use my patched version
@@ -283,6 +271,6 @@ But you may use safer HTTPS instead.")
 (require-package 'package-lint) ; lint package before submit it to MELPA
 (require-package 'iedit)
 (require-package 'ace-pinyin)
-(require-package 'org-jira) ; @see https://github.com/ahungry/org-jira
+(require-package 'bash-completion)
 
 (provide 'init-elpa)
