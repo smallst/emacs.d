@@ -66,6 +66,7 @@ But you may use safer HTTPS instead.")
     ;biblio
     ;biblio-core
     ;let-alist
+    pdf-tools
     zeal-at-point
     graphviz-dot-mode
     cpputils-cmake
