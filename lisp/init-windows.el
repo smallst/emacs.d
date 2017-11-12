@@ -6,7 +6,6 @@
 (global-set-key (kbd "C-x 4 u") 'winner-undo)
 (global-set-key (kbd "C-x 4 U") 'winner-redo)
 
-(/ .61803398875 (- 1 .61803398875))
 
 (defvar my-ratio-dict
   '((1 . 1.61803398875)
@@ -20,7 +19,7 @@
   "Split window horizontally and resize the new window.
 'C-u number M-x my-split-window-horizontally' uses pre-defined
 ratio from `my-ratio-dict'.
-Always focus bigger window."
+Always focus on bigger window."
   (interactive "P")
   (let* (ratio-val)
     (cond
@@ -30,7 +29,7 @@ Always focus bigger window."
                                            (1+ ratio-val)))))
      (t
       (split-window-horizontally)))
-    (set-window-buffer (next-window) (other-buffer))
+    (set-window-buffer (next-window) (current-buffer))
     (if (or (not ratio-val)
             (>= ratio-val 1))
         (windmove-right))))
@@ -39,7 +38,7 @@ Always focus bigger window."
   "Split window vertically and resize the new window.
 'C-u number M-x my-split-window-vertically' uses pre-defined
 ratio from `my-ratio-dict'.
-Always focus bigger window."
+Always focus on bigger window."
   (interactive "P")
   (let* (ratio-val)
     (cond
@@ -49,8 +48,8 @@ Always focus bigger window."
                                          (1+ ratio-val)))))
      (t
       (split-window-vertically)))
-    ;; open another window with other-buffer
-    (set-window-buffer (next-window) (other-buffer))
+    ;; open another window with current-buffer
+    (set-window-buffer (next-window) (current-buffer))
     ;; move focus if new window bigger than current one
     (if (or (not ratio-val)
             (>= ratio-val 1))

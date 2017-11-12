@@ -2,7 +2,7 @@
 
 ;; Copyright (C) 2017 Chen Bin
 ;;
-;; Version: 1.0.0
+;; Version: 1.0.3
 ;; Author: Chen Bin <chenbin DOT sh AT gmail DOT com>
 ;; URL: http://github.com/redguardtoo/eacl
 ;; Package-Requires: ((emacs "24.3") (ivy "0.9.1"))
@@ -46,6 +46,39 @@
 ;; `eacl-complete-tag' completes HTML tag which ends with ">".
 ;; For example, input "<div" and run this command.
 ;;
+;; Modify `grep-find-ignored-directories' and `grep-find-ignored-files'
+;; to setup directories and files grep should ignore:
+;;   (eval-after-load 'grep
+;;     '(progn
+;;        (dolist (v '("node_modules"
+;;                     "bower_components"
+;;                     ".sass_cache"
+;;                     ".cache"
+;;                     ".npm"))
+;;          (add-to-list 'grep-find-ignored-directories v))
+;;        (dolist (v '("*.min.js"
+;;                     "*.bundle.js"
+;;                     "*.min.css"
+;;                     "*.json"
+;;                     "*.log"))
+;;          (add-to-list 'grep-find-ignored-files v))))
+;;
+;; Or you can setup above ignore options in ".dir-locals.el".
+;; The content of ".dir-locals.el":
+;;   ((nil . ((eval . (progn
+;;                      (dolist (v '("node_modules"
+;;                                   "bower_components"
+;;                                   ".sass_cache"
+;;                                   ".cache"
+;;                                   ".npm"))
+;;                        (add-to-list 'grep-find-ignored-directories v))
+;;                      (dolist (v '("*.min.js"
+;;                                   "*.bundle.js"
+;;                                   "*.min.css"
+;;                                   "*.json"
+;;                                   "*.log"))
+;;                        (add-to-list 'grep-find-ignored-files v)))))))
+;;
 ;; GNU Grep, Emacs 24.3 and counsel (https://github.com/abo-abo/swiper)
 ;; are required.
 ;;
@@ -56,6 +89,7 @@
 
 ;;; Code:
 (require 'ivy)
+(require 'grep)
 (require 'cl-lib)
 
 (defgroup eacl nil
@@ -77,51 +111,14 @@
   :type '(repeat sexp)
   :group 'eacl)
 
+(defcustom eacl-project-root-callback 'eacl-get-project-root
+  "The callback to get project root directory.
+The callback is expected to return the path of project root."
+  :type 'function
+  :group 'eacl)
+
 (defvar eacl-keyword-start nil
   "The start position of multi-line keyword.  Internal variable.")
-
-(defcustom eacl-grep-ignore-dirs
-  '(".git"
-    ".bzr"
-    ".svn"
-    "bower_components"
-    "node_modules"
-    ".sass-cache"
-    ".cache"
-    "test"
-    "tests"
-    ".metadata"
-    "logs")
-  "Directories to ignore when grepping."
-  :type '(repeat sexp)
-  :group 'eacl)
-
-(defcustom eacl-grep-ignore-file-exts
-  '("log"
-    "properties"
-    "session"
-    "swp")
-  "File extensions to ignore when grepping."
-  :type '(repeat sexp)
-  :group 'eacl)
-
-(defcustom eacl-grep-ignore-file-names
-  '("TAGS"
-    "tags"
-    "GTAGS"
-    "GPATH"
-    ".bookmarks.el"
-    "*.svg"
-    "history"
-    "#*#"
-    "*.min.js"
-    "*bundle*.js"
-    "*vendor*.js"
-    "*.min.css"
-    "*~")
-  "File names to ignore when grepping."
-  :type '(repeat sexp)
-  :group 'eacl)
 
 ;;;###autoload
 (defun eacl-get-project-root ()
@@ -139,37 +136,44 @@
 
 (defun eacl-trim-left (s)
   "Remove whitespace at the beginning of S."
-  (if (string-match "\\`[ \t\n\r]+" s)
-      (replace-match "" t t s)
-    s))
+  (if (string-match "\\`[ \t\n\r]+" s) (replace-match "" t t s) s))
 
 (defun eacl-encode(s)
   "Encode S."
-  ;; encode "{}[]"
-  (setq s (replace-regexp-in-string "\"" "\\\\\"" s))
-  (setq s (replace-regexp-in-string "\\?" "\\\\\?" s))
-  (setq s (replace-regexp-in-string "\\$" "\\\\x24" s))
-  (setq s (replace-regexp-in-string "\\*" "\\\\\*" s))
-  (setq s (replace-regexp-in-string "\\." "\\\\\." s))
-  (setq s (replace-regexp-in-string "\\[" "\\\\\[" s))
-  (setq s (replace-regexp-in-string "\\]" "\\\\\]" s))
-  (setq s (replace-regexp-in-string "\n" "[[:space:]]" s))
-  (setq s (replace-regexp-in-string "\r" "[[:space:]]" s))
-  ;; don't know how to pass "(" to shell, so make a little noise here
-  (setq s (replace-regexp-in-string "\(" "." s))
-  (setq s (replace-regexp-in-string "\)" "." s))
+  (setq s (regexp-quote s))
+  ;; Be generic about quotes. Most scrip languages could use either double quotes
+  ;; or single quote to wrap string.
+  ;; In this case, we don't care, we just want to get mores candidates for
+  ;; code completion
+  ;; For example, in javascript, `import { Button } from "react-bootstrap` and
+  ;; `import { Button } from 'react-bootstrap';` are same.
+  (setq s (replace-regexp-in-string "'" "." s))
+  (setq s (replace-regexp-in-string "\"" "." s))
   s)
+
+(defun eacl-shell-quote-argument (argument)
+  "Try `shell-quote-argument' ARGUMENT and process special characters."
+  (cond
+   ((eq system-type 'ms-dos)
+    (shell-quote-argument argument))
+   (t
+    ;; We only use GNU Grep from Cygwin/MSYS2 even on Windows.
+    ;; So we can safely assume the Linux Shell is available.
+    ;; Below code is copied from `shell-quote-argument'.
+    (if (equal argument "")
+        "''"
+      (replace-regexp-in-string "[^-0-9a-zA-Z<>{}[]:_./\n]" "\\\\\\&"
+                                (replace-regexp-in-string
+                                 "[\n\r\t ]" "[[:space:]]"
+                                 argument))))))
 
 (defun eacl-grep-exclude-opts ()
   "Create grep exclude options."
   (concat (mapconcat (lambda (e) (format "--exclude-dir='%s'" e))
-                     eacl-grep-ignore-dirs " ")
-          " "
-          (mapconcat (lambda (e) (format "--exclude='*.%s'" e))
-                     eacl-grep-ignore-file-exts " ")
+                     grep-find-ignored-directories " ")
           " "
           (mapconcat (lambda (e) (format "--exclude='%s'" e))
-                     eacl-grep-ignore-file-names " ")))
+                     grep-find-ignored-files " ")))
 
 ;;;###autoload
 (defun eacl-get-keyword (cur-line)
@@ -202,19 +206,20 @@ If REGEX is nil, we only complete current line.
 CUR-LINE and KEYWORD are also required.  START is position we insert
 next text.
 If REGEX is not nil, complete statement."
-  (let* ((default-directory (or (eacl-get-project-root) default-directory))
-         (cmd-format-opts (if regex "%s -rshPzoI %s \"%s\" *"
-                            "%s -rshEI %s \"%s\" *"))
-         (cmd (format cmd-format-opts
+  (let* ((default-directory (or (funcall eacl-project-root-callback) default-directory))
+         (quoted-keyword (eacl-shell-quote-argument keyword))
+         (cmd (format (if regex "%s -rshzoI %s -- \"%s\" *" "%s -rshI %s -- \"%s\" *")
                       eacl-grep-program
                       (eacl-grep-exclude-opts)
-                      (if regex (concat keyword regex)
-                        keyword)))
+                      (if regex (concat quoted-keyword regex) quoted-keyword)))
          ;; Please note grep's "-z" will output null character at the end of each candidate
          (sep (if regex "\x0" "[\r\n]+"))
          (collection (split-string (shell-command-to-string cmd) sep t "[ \t\r\n]+"))
          (rlt t))
-    ;; (message "cmd=%s collection length=%s sep=%s" cmd (length collection) sep)
+    ;; (message "keyword=%s" keyword)
+    ;; (message "quoted keyword=%s" quoted-keyword)
+    ;; (message "cmd=%s" cmd)
+    ;; (message "collection length=%s sep=%s" (length collection) sep)
     (when collection
       (setq collection (delq nil (delete-dups collection)))
       (cond
@@ -227,7 +232,7 @@ If REGEX is not nil, complete statement."
           (eacl-replace-text (car collection) start regex))))
        ((> (length collection) 1)
         ;; uniq
-        (if regex
+        (when regex
           (setq collection (mapcar 'eacl-create-candidate-summary collection)))
         (ivy-read "candidates:"
                   collection
@@ -254,8 +259,11 @@ If REGEX is not nil, complete statement."
         (message "Auto-completion done!")
         (setq continue nil))
       (cond
-       ((and continue (yes-or-no-p "Continue?"))
-        (setq keyword (eacl-encode (eacl-trim-left (buffer-substring-no-properties start (point))))))
+       (continue
+        (when (fboundp 'xref-pulse-momentarily)
+          (xref-pulse-momentarily))
+        (when (yes-or-no-p "Continue?")
+          (setq keyword (eacl-encode (eacl-trim-left (buffer-substring-no-properties start (point)))))))
        (t
         (setq continue nil))))))
 

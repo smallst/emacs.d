@@ -243,7 +243,6 @@
   (unless (is-buffer-file-temp)
 
     ;; @see http://xugx2007.blogspot.com.au/2007/06/benjamin-rutts-emacs-c-development-tips.html
-    (setq compilation-window-height 8)
     (setq compilation-finish-functions
           '(compilation-finish-hide-buffer-on-success))
 
@@ -889,9 +888,9 @@ If no region is selected. You will be asked to use `kill-ring' or clipboard inst
 
 ;; {{ eacl - emacs auto complete line(s)
 (global-set-key (kbd "C-x C-l") 'eacl-complete-line)
-(global-set-key (kbd "C-x ;") 'eacl-complete-statement)
-(global-set-key (kbd "C-x C-]") 'eacl-complete-snippet)
-(global-set-key (kbd "C-x C-t") 'eacl-complete-tag)
+(global-set-key (kbd "C-c ;") 'eacl-complete-statement)
+(global-set-key (kbd "C-c C-]") 'eacl-complete-snippet)
+(global-set-key (kbd "C-c .") 'eacl-complete-tag)
 ;; }}
 
 ;; {{ wgrep and rgrep, inspired by http://oremacs.com/2015/01/27/my-refactoring-workflow/
@@ -915,5 +914,28 @@ If no region is selected. You will be asked to use `kill-ring' or clipboard inst
 
 ;; @see https://github.com/szermatt/emacs-bash-completion
 (bash-completion-setup)
+
+;; {{ eacl and other general grep (rgrep, grep ...) setup
+(eval-after-load 'grep
+  '(progn
+     (dolist (v '("auto"
+                  "target"
+                  "node_modules"
+                  "bower_components"
+                  "*dist"
+                  ".sass_cache"
+                  ".cache"
+                  ".npm"
+                  "elpa"))
+       (add-to-list 'grep-find-ignored-directories v))
+
+     (dolist (v '("*.min.js"
+                  "*.map"
+                  "*.bundle.js"
+                  "*.min.css"
+                  "*.json"
+                  "*.log"))
+       (add-to-list 'grep-find-ignored-files v))))
+;; }}
 
 (provide 'init-misc)
