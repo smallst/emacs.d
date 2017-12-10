@@ -9,8 +9,17 @@
     ace-window ; lastest stable is released on year 2014
     bbdb
     dumb-jump
+    websocket ; to talk to the browser
     color-theme
+    evil-exchange
+    evil-find-char-pinyin
+    evil-lion
+    iedit
+    undo-tree
+    lispy
+    lispyville
     js-doc
+    jss ; remote debugger of browser
     ;; {{ since stable v0.9.1 released, we go back to stable version
     ;; ivy
     ;; counsel
@@ -61,14 +70,11 @@
     ox-reveal
     flymake-go
     pyim-basedict
-    ;helm-bibtex
-    ;biblio
-    ;biblio-core
-    ;let-alist
     pdf-tools
     zeal-at-point
     graphviz-dot-mode
     cpputils-cmake
+    zoutline
     company-c-headers)
   "Don't install any Melpa packages except these packages")
 
@@ -278,5 +284,21 @@
 (require-package 'iedit)
 (require-package 'ace-pinyin)
 (require-package 'bash-completion)
+(require-package 'websocket) ; for debug debugging of browsers
+(require-package 'jss)
+(require-package 'undo-tree)
+(require-package 'lispy)
+(require-package 'lispyville)
+(require-package 'evil)
+(require-package 'evil-escape)
+(require-package 'evil-exchange)
+(require-package 'evil-find-char-pinyin)
+(require-package 'evil-iedit-state)
+(require-package 'evil-mark-replace)
+(require-package 'evil-matchit)
+(require-package 'evil-nerd-commenter)
+(require-package 'evil-surround)
+(require-package 'evil-visualstar)
+
 
 (provide 'init-elpa)
