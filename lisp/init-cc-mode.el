@@ -83,20 +83,24 @@
       (eldoc-mode 1))
  (defun myself-cc-mode-hook ()
   (set (make-local-variable 'my-exec-command)
-       (let ((myfile (file-name-sans-extension buffer-file-name)))
+       (let ((myfile (if cppcm-build-dir
+                         (cppcm-get-exe-path-current-buffer)
+                       (file-name-sans-extension buffer-file-name))))
          (format "%s;echo Press any key to continue;read -n"
                  myfile)))
   (set (make-local-variable 'my-gdb-command)
-       (let ((myfile (file-name-sans-extension buffer-file-name)))
+       (let ((myfile (if cppcm-build-dir
+                         (cppcm-get-exe-path-current-buffer)
+                       (file-name-sans-extension buffer-file-name))))
          (format "gdb -i=mi %s"
                  myfile)))
   (global-set-key [f9] 'myself-compile)
   (global-set-key [f8] 'myself-exec)
   (global-set-key (kbd "S-<f8>") 'myself-gdb))
 (defun myself-c-mode-hook ()
-  (if (file-exists-p "Makefile")
+  (if cppcm-src-dir
       (set (make-local-variable 'my-compile-command)
-           "make -k")
+           compile-command)
     (set (make-local-variable 'my-compile-command)
          ;; emulate make's .c.o implicit pattern rule, but with
          ;; different defaults for the CC, CPPFLAGS, and CFLAGS
@@ -115,9 +119,9 @@
   ;;                myfile)))
   )
 (defun myself-c++-mode-hook ()
-  (if (file-exists-p "Makefile")
+  (if cppcm-src-dir
       (set (make-local-variable 'my-compile-command)
-           "make -k")
+           compile-command)
     (set (make-local-variable 'my-compile-command)
          (let ((myfile (file-name-nondirectory buffer-file-name)))
            (format "%s -o %s %s %s"
