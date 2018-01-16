@@ -87,6 +87,7 @@
         ;; ("melpa" . "http://mirrors.163.com/elpa/melpa/")
         ;; ("melpa-stable" . "http://mirrors.163.com/elpa/melpa-stable/")
         ;; }}
+        ("org" . "https://orgmode.org/elpa/")
         ("melpa" . "https://melpa.org/packages/")
         ("melpa-stable" . "https://stable.melpa.org/packages/")
         ))
