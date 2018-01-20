@@ -2,7 +2,7 @@
   (save-excursion
     (beginning-of-line)
     (if (re-search-forward "EVT_" (line-end-position) t)
-      'c-basic-offset
+        'c-basic-offset
       (c-lineup-topmost-intro-cont langelem))))
 
 ;; avoid default "gnu" style, use more popular one
@@ -25,7 +25,7 @@
   (setq lazy-lock-defer-contextually t)
   (setq lazy-lock-defer-time 0)
 
-  ;make DEL take all previous whitespace with it
+                                        ;make DEL take all previous whitespace with it
   (c-toggle-hungry-state 1)
 
   ;; indent
@@ -81,95 +81,116 @@
       ;; emacs 24.4+ will set up eldoc automatically.
       ;; so below code is NOT needed.
       (eldoc-mode 1))
- (defun myself-cc-mode-hook ()
-  (set (make-local-variable 'my-exec-command)
-       (let ((myfile (if cppcm-build-dir
-                         (cppcm-get-exe-path-current-buffer)
-                       (file-name-sans-extension buffer-file-name))))
-         (format "%s;echo Press any key to continue;read -n"
-                 myfile)))
-  (set (make-local-variable 'my-gdb-command)
-       (let ((myfile (if cppcm-build-dir
-                         (cppcm-get-exe-path-current-buffer)
-                       (file-name-sans-extension buffer-file-name))))
-         (format "gdb -i=mi %s"
-                 myfile)))
-  (global-set-key [f9] 'myself-compile)
-  (global-set-key [f8] 'myself-exec)
-  (global-set-key (kbd "S-<f8>") 'myself-gdb))
-(defun myself-c-mode-hook ()
-  (if cppcm-src-dir
-      (set (make-local-variable 'my-compile-command)
-           compile-command)
-    (set (make-local-variable 'my-compile-command)
-         ;; emulate make's .c.o implicit pattern rule, but with
-         ;; different defaults for the CC, CPPFLAGS, and CFLAGS
-         ;; variables:
-         ;; $(CC) -c -o $@ $(CPPFLAGS) $(CFLAGS) $<
-         (let ((myfile (file-name-nondirectory buffer-file-name)))
-           (format "%s -o %s %s %s" 
-                   (or (getenv "CC") "gcc")
-                   (file-name-sans-extension myfile)
-                   ;; (or (getenv "CPPFLAGS") "-DDEBUG=9")
-                   (or (getenv "CFLAGS") "-Wall -g")
-                   myfile))))
-  ;; (set (make-local-variable 'my-exec-command)
-  ;;      (let ((myfile (file-name-sans-extension buffer-file-name)))
-  ;;        (format "%s;echo Press any key to continue;read -n"
-  ;;                myfile)))
-  )
-(defun myself-c++-mode-hook ()
-  (if cppcm-src-dir
-      (set (make-local-variable 'my-compile-command)
-           compile-command)
-    (set (make-local-variable 'my-compile-command)
-         (let ((myfile (file-name-nondirectory buffer-file-name)))
-           (format "%s -o %s %s %s"
-                   (or (getenv "CC") "g++")
-                   (file-name-sans-extension myfile)
-                   (or (getenv "CFLAGS") "-Wall -g -std=c++11")
-                   myfile))) )
-  
-  ;; (set (make-local-variable 'my-exec-command)
-  ;;      (let ((myfile (file-name-sans-extension buffer-file-name)))
-  ;;        (format "%s;echo Press any key to continue;read -n"
-  ;;                myfile)))
-  )
-(defun myself-exec ()
-  (interactive)
-  (progn
-    (let* ((buf-name (generate-new-buffer-name "result"))
-           (buf (get-buffer-create buf-name)))
-      (async-shell-command my-exec-command buf)
-      (other-window 1)
-      (let ((proc (get-buffer-process buf)))
-        (if (and proc (null (eq (process-status proc) 'exit)))
-            (set-process-sentinel proc '(lambda (proc event)
-                                          (if (eq (process-status proc) 'exit)
-                                              (with-current-buffer (process-buffer proc) (dying-mode 't)))))
-          (delete-window)))))
-  )
-(defun myself-compile ()
-  (interactive)
-  (save-buffer)
-  (compile my-compile-command))
-(defun myself-gdb ()
-  (interactive)
-  (gdb my-gdb-command))
+    (defun myself-cc-mode-hook ()
+      (set (make-local-variable 'my-exec-command)
+           (let ((myfile (if cppcm-build-dir
+                             (cppcm-get-exe-path-current-buffer)
+                           (file-name-sans-extension buffer-file-name))))
+             (format "%s;echo Press any key to continue;read -n"
+                     myfile)))
+      (set (make-local-variable 'my-gdb-command)
+           (let ((myfile (if cppcm-build-dir
+                             (cppcm-get-exe-path-current-buffer)
+                           (file-name-sans-extension buffer-file-name))))
+             (format "gdb -i=mi %s"
+                     myfile)))
+      (global-set-key [f9] 'myself-compile)
+      (global-set-key [f8] 'myself-exec)
+      (global-set-key (kbd "S-<f8>") 'myself-exec-withargs))
+    (global-set-key (kbd "C-<f8>") 'myself-gdb)
+    (defun myself-c-mode-hook ()
+      (if cppcm-src-dir
+          (set (make-local-variable 'my-compile-command)
+               compile-command)
+        (set (make-local-variable 'my-compile-command)
+             ;; emulate make's .c.o implicit pattern rule, but with
+             ;; different defaults for the CC, CPPFLAGS, and CFLAGS
+             ;; variables:
+             ;; $(CC) -c -o $@ $(CPPFLAGS) $(CFLAGS) $<
+             (let ((myfile (file-name-nondirectory buffer-file-name)))
+               (format "%s -o %s %s %s" 
+                       (or (getenv "CC") "gcc")
+                       (file-name-sans-extension myfile)
+                       ;; (or (getenv "CPPFLAGS") "-DDEBUG=9")
+                       (or (getenv "CFLAGS") "-Wall -g")
+                       myfile))))
+      ;; (set (make-local-variable 'my-exec-command)
+      ;;      (let ((myfile (file-name-sans-extension buffer-file-name)))
+      ;;        (format "%s;echo Press any key to continue;read -n"
+      ;;                myfile)))
+      )
+    (defun myself-c++-mode-hook ()
+      (if cppcm-src-dir
+          (set (make-local-variable 'my-compile-command)
+               compile-command)
+        (set (make-local-variable 'my-compile-command)
+             (let ((myfile (file-name-nondirectory buffer-file-name)))
+               (format "%s -o %s %s %s"
+                       (or (getenv "CC") "g++")
+                       (file-name-sans-extension myfile)
+                       (or (getenv "CFLAGS") "-Wall -g -std=c++11")
+                       myfile))) )
+      
+      ;; (set (make-local-variable 'my-exec-command)
+      ;;      (let ((myfile (file-name-sans-extension buffer-file-name)))
+      ;;        (format "%s;echo Press any key to continue;read -n"
+      ;;                myfile)))
+      )
+    (defun myself-exec ()
+      (interactive)
+      (progn
+        (let* ((buf-name (generate-new-buffer-name "result"))
+               (buf (get-buffer-create buf-name)))
+          (async-shell-command my-exec-command buf)
+          (other-window 1)
+          (let ((proc (get-buffer-process buf)))
+            (if (and proc (null (eq (process-status proc) 'exit)))
+                (set-process-sentinel proc '(lambda (proc event)
+                                              (if (eq (process-status proc) 'exit)
+                                                  (with-current-buffer (process-buffer proc) (dying-mode 't)))))
+              (delete-window)))))
+      )
+    (defun myself-exec-withargs ()
+      (interactive
+       (let ((command-args (read-shell-command "exec:" (let ((myfile (if cppcm-build-dir
+                                                                         (cppcm-get-exe-path-current-buffer)
+                                                                       (file-name-sans-extension buffer-file-name))))
+                                                         myfile))))
+(progn
+        (let* ((buf-name (generate-new-buffer-name "result"))
+               (buf (get-buffer-create buf-name))
+               (command-with-args (format "%s;echo Press any key to continue;read -n" command-args)))
+          (async-shell-command command-with-args buf)
+          (other-window 1)
+          (let ((proc (get-buffer-process buf)))
+            (if (and proc (null (eq (process-status proc) 'exit)))
+                (set-process-sentinel proc '(lambda (proc event)
+                                              (if (eq (process-status proc) 'exit)
+                                                  (with-current-buffer (process-buffer proc) (dying-mode 't)))))
+              (delete-window)))))
+      
+) ) )
+    (defun myself-compile ()
+      (interactive)
+      (save-buffer)
+      (compile my-compile-command))
+    (defun myself-gdb ()
+      (interactive)
+      (gdb my-gdb-command))
 
-(add-hook 'c-mode-hook
-          (lambda ()
-            (when (buffer-file-name)
-              
-              ( myself-c-mode-hook)
-              (myself-cc-mode-hook))))
-(add-hook 'c++-mode-hook
-          (lambda ()
-            (when (buffer-file-name)
-              (myself-cc-mode-hook)
-              (myself-c++-mode-hook)
-              )))
-   ))
+    (add-hook 'c-mode-hook
+              (lambda ()
+                (when (buffer-file-name)
+                  
+                  ( myself-c-mode-hook)
+                  (myself-cc-mode-hook))))
+    (add-hook 'c++-mode-hook
+              (lambda ()
+                (when (buffer-file-name)
+                  (myself-cc-mode-hook)
+                  (myself-c++-mode-hook)
+                  )))
+    ))
 (add-hook 'c-mode-common-hook 'c-mode-common-hook-setup)
 
 (provide 'init-cc-mode)

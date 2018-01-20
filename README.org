@@ -6,12 +6,17 @@
  - read the [[https://github.com/redguardtoo/emacs.d/blob/master/README.org][redguardtoo's readme]] first.
 
 * add-ins
- - C/C++ one-file compile and run command
- - mozrepl select tab to refresh
- - caffe support
- - golang support
- - org-reveal
- - ox-bibtex
+** C/C++ one-file compile and run command
+   - ~f9~ for compile
+   - ~f8~ for execute program
+   - ~<S-f8>~ for execute program with arguments
+   - ~<C-f8>~ for gdb
+     
+** mozrepl select tab to refresh
+** caffe support
+** golang support
+** org-reveal
+** ox-bibtex
 ** write paper with org-mode
 *** use ox-bibtex
 add 
