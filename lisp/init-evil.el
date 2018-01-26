@@ -517,8 +517,6 @@ If the character before and after CH is space or tab, CH is NOT slash"
        "tt" 'dumb-jump-go
        "tb" 'dumb-jump-back
        "tm" 'my-git-timemachine
-       "tdb" 'tidy-buffer
-       "tdl" 'tidy-current-line
        ;; toggle overview,  @see http://emacs.wordpress.com/2007/01/16/quick-and-dirty-code-folding/
        "ov" 'my-overview-of-current-buffer
        "or" 'open-readme-in-git-root-directory
@@ -755,7 +753,7 @@ If the character before and after CH is space or tab, CH is NOT slash"
        "ga" 'w3m-java-search
        "gh" 'w3mext-hacker-search ; code search in all engines with firefox
        "gq" 'w3m-stackoverflow-search
-       "mm" 'mpc-which-song
+       "mw" 'mpc-which-song
        "mn" 'mpc-next-prev-song
        "mp" '(lambda () (interactive) (mpc-next-prev-song t)))
 ;; }}

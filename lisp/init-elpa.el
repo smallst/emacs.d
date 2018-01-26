@@ -8,6 +8,8 @@
   '(ace-mc
     ace-window ; lastest stable is released on year 2014
     bbdb
+    command-log-mode
+    auto-yasnippet
     dumb-jump
     websocket ; to talk to the browser
     color-theme
@@ -51,14 +53,10 @@
     htmlize
     scratch
     session
-    bookmark+
     flymake-lua
     multi-term
-    dired+
     inflections
-    dropdown-list
     lua-mode
-    tidy
     pomodoro
     auto-compile
     packed
@@ -76,12 +74,15 @@
     cpputils-cmake
     zoutline
     company-c-headers)
-  "Don't install any Melpa packages except these packages")
+  "Packages to install from melpa-unstable.")
+
+(defvar melpa-stable-banned-packages nil
+  "Banned packages from melpa-stable")
 
 (setq package-archives
       '(;; uncomment below line if you need use GNU ELPA
         ;; ("gnu" . "https://elpa.gnu.org/packages/")
-        ("localelpa" . "~/.emacs.d/localelpa/")
+        ;; ("localelpa" . "~/.emacs.d/localelpa/")
         ;; ("my-js2-mode" . "https://raw.githubusercontent.com/redguardtoo/js2-mode/release/") ; github has some issue
         ;; {{ backup repositories
         ;; ("melpa" . "http://mirrors.163.com/elpa/melpa/")
@@ -118,21 +119,14 @@
   (let* (rlt)
     (cond
       ((string= archive "melpa-stable")
-       (setq rlt t)
-       ;; don's install `request v0.0.3' which drop suppport of Emacs 24.3
-       (if (string= package "request") (setq rlt nil)))
+       (setq rlt (not (memq package melpa-stable-banned-packages))))
       ((string= archive "melpa")
-       (cond
-         ;; a few exceptions from unstable melpa
-         ((or (memq package melpa-include-packages)
-              ;; install all color themes
-              (string-match (format "%s" package) "-theme"))
-          (setq rlt t))
-         (t
-           ;; I don't trust melpa which is too unstable
-           (setq rlt nil))))
+       ;; NO unstable packages with a few exceptions
+       (setq rlt (or (memq package melpa-include-packages)
+                      ;; color themes are welcomed
+                      (string-match (format "%s" package) "-theme"))))
       (t
-        ;; other third party repositories I trust
+        ;; I'm not picky on other repositories
         (setq rlt t)))
     rlt))
 
@@ -176,11 +170,11 @@
 (require-package 'haskell-mode)
 (require-package 'gitignore-mode)
 (require-package 'gitconfig-mode)
-(unless *emacs24old* (require-package 'gist))
+(require-package 'gist)
 (require-package 'wgrep)
 (require-package 'request)
 (require-package 'lua-mode)
-(unless *emacs24old* (require-package 'robe))
+(require-package 'robe)
 (require-package 'inf-ruby)
 (require-package 'workgroups2)
 (require-package 'yaml-mode)
@@ -195,7 +189,6 @@
 (require-package 'haml-mode)
 (require-package 'scss-mode)
 (require-package 'markdown-mode)
-(require-package 'dired+)
 (require-package 'link)
 (require-package 'connection)
 (require-package 'dictionary) ; dictionary requires 'link and 'connection
@@ -219,14 +212,13 @@
 (require-package 'ibuffer-vc)
 (require-package 'less-css-mode)
 (require-package 'move-text)
-(require-package 'mwe-log-commands)
+(require-package 'command-log-mode)
 (require-package 'page-break-lines)
 (require-package 'regex-tool)
 (require-package 'groovy-mode)
 (require-package 'ruby-compilation)
 (require-package 'emmet-mode)
 (require-package 'session)
-(require-package 'tidy)
 (require-package 'unfill)
 (require-package 'w3m)
 (require-package 'idomenu)
@@ -239,16 +231,13 @@
 (require-package 'bbdb)
 (require-package 'pomodoro)
 (require-package 'flymake-lua)
-(require-package 'dropdown-list)
 ;; rvm-open-gem to get gem's code
 (require-package 'rvm)
 ;; C-x r l to list bookmarks
-(require-package 'bookmark+)
 (require-package 'multi-term)
 (require-package 'js-doc)
 (require-package 'js2-mode)
-(unless *emacs24old*
-  (require-package 'rjsx-mode))
+(require-package 'rjsx-mode)
 (require-package 's)
 ;; js2-refactor requires js2, dash, s, multiple-cursors, yasnippet
 ;; I don't use multiple-cursors, but js2-refactor requires it
@@ -301,5 +290,9 @@
 (require-package 'evil-surround)
 (require-package 'evil-visualstar)
 
+;; workaround issues color-theme
+(let* ((dir (file-truename "~/.emacs.d/elpa/color-theme-20070910.1007/themes")))
+  (unless (file-exists-p dir)
+    (make-directory dir)))
 
 (provide 'init-elpa)
