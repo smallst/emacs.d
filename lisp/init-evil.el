@@ -535,7 +535,7 @@ If the character before and after CH is space or tab, CH is NOT slash"
        "xc" 'save-buffers-kill-terminal
        "rr" 'my-counsel-recentf
        "rh" 'counsel-yank-bash-history ; bash history command => yank-ring
-       "rf" 'counsel-goto-recent-directory
+       "rf" 'counsel-recent-dir
        "da" 'diff-region-tag-selected-as-a
        "db" 'diff-region-compare-with-b
        "di" 'evilmi-delete-items
@@ -647,6 +647,8 @@ If the character before and after CH is space or tab, CH is NOT slash"
 ;; {{ Use `SPC` as leader key
 ;; all keywords arguments are still supported
 (nvmap :prefix "SPC"
+       "pc" 'my-dired-redo-previous-shell-command
+       "cc" 'my-dired-redo-last-shell-command
        "ss" 'wg-create-workgroup ; save windows layout
        "se" 'evil-iedit-state/iedit-mode ; start iedit in emacs
        "sc" 'shell-command
