@@ -1,12 +1,19 @@
 ;; {{ shell and conf
 (add-to-list 'auto-mode-alist '("\\.[^b][^a][a-zA-Z]*rc$" . conf-mode))
 (add-to-list 'auto-mode-alist '("\\.aspell\\.en\\.pws\\'" . conf-mode))
+(add-to-list 'auto-mode-alist '("\\mimeapps\\.list$" . conf-mode))
 (add-to-list 'auto-mode-alist '("\\.editorconfig$" . conf-mode))
 (add-to-list 'auto-mode-alist '("\\.meta\\'" . conf-mode))
 (add-to-list 'auto-mode-alist '("\\.?muttrc\\'" . conf-mode))
 (add-to-list 'auto-mode-alist '("\\.mailcap\\'" . conf-mode))
 ;; }}
 
+;; Avoid potential lag:
+;; https://emacs.stackexchange.com/questions/28736/emacs-pointcursor-movement-lag/28746
+;; `next-line' triggers the `format-mode-line' which triggers `projectile-project-name'
+;; I use find-file-in-project instead of projectile. So I don't have this issue at all.
+;; Set `auto-window-vscroll' to nil to avoid triggering `format-mode-line'.
+(setq auto-window-vscroll nil)
 
 (add-to-list 'auto-mode-alist '("TAGS\\'" . text-mode))
 (add-to-list 'auto-mode-alist '("\\.ctags\\'" . text-mode))
@@ -918,6 +925,19 @@ If no region is selected. You will be asked to use `kill-ring' or clipboard inst
        (add-to-list 'grep-find-ignored-files v))))
 ;; }}
 
-(add-hook 'lispy-mode-hook #'lispyville-mode)
+;; {{ https://www.emacswiki.org/emacs/EmacsSession better than "desktop.el"
+(setq session-save-file (expand-file-name "~/.emacs.d/.session"))
+(add-hook 'after-init-hook 'session-initialize)
+;; }}
+
+;; random color theme
+(defun random-color-theme ()
+  "Random color theme."
+  (interactive)
+  (unless (featurep 'counsel) (require 'counsel))
+  (let* ((available-themes (mapcar 'symbol-name (custom-available-themes)))
+         (theme (nth (random (length available-themes)) available-themes)))
+    (counsel-load-theme-action theme)
+    (message "Color theme [%s] loaded." theme)))
 
 (provide 'init-misc)

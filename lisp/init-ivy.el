@@ -191,7 +191,7 @@ Or else, find files since 24 weeks (6 months) ago."
   (interactive)
   (unless recentf-mode (recentf-mode 1))
   (let* ((cands (delete-dups
-                      (append my-dired-recent-dirs
+                      (append my-dired-directory-history
                               (mapcar 'file-name-directory recentf-list)
                               ;; fasd history
                               (if (executable-find "fasd")
@@ -251,7 +251,8 @@ If N is nil, use `ivy-mode' to browse the `kill-ring'."
 ;; {{ swiper&ivy-mode
 (defun swiper-the-thing ()
   (interactive)
-  (swiper (my-use-selected-string-or-ask "")))
+  ;; better performance on large files than swiper
+  (counsel-grep-or-swiper (my-use-selected-string-or-ask "")))
 
 (global-set-key (kbd "C-s") 'swiper)
 ;; }}
