@@ -87,12 +87,10 @@
     erlang
     workgroups2
     ox-reveal
-    flymake-go
     pyim-basedict
     pdf-tools
     zeal-at-point
     graphviz-dot-mode
-    cpputils-cmake
     zoutline
     company-c-headers
     company-statistics)
@@ -288,13 +286,8 @@
 (require-package 'dumb-jump)
 (require-package 'emms)
 (require-package 'ox-reveal)
-(require-package 'org2jekyll)
 (require-package 'protobuf-mode)
-(require-package 'go-mode)
-(require-package 'go-eldoc)
-(require-package 'company-go)
 (require-package 'graphviz-dot-mode)
-;(require-package 'flymake-go)
 (require-package 'package-lint) ; lint package before submit it to MELPA
 (require-package 'iedit)
 (require-package 'ace-pinyin)
@@ -346,7 +339,9 @@
   (require-package 'heroku-theme)
   (require-package 'hemisu-theme)
   (require-package 'badger-theme)
-  (require-package 'distinguished-theme))
+  (require-package 'distinguished-theme)
+  (require-package 'flymake-cursor)
+  )
 ; }}
 
 ;; kill buffer without my confirmation
