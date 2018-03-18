@@ -8,6 +8,7 @@
   '(ace-mc
     color-theme ; emacs24 need this package
     ace-window ; lastest stable is released on year 2014
+    auto-package-update
     bbdb
     command-log-mode
     auto-yasnippet
@@ -79,6 +80,7 @@
     pomodoro
     auto-compile
     packed
+    keyfreq
     gitconfig-mode
     textile-mode
     w3m
@@ -92,7 +94,8 @@
     graphviz-dot-mode
     cpputils-cmake
     zoutline
-    company-c-headers)
+    company-c-headers
+    company-statistics)
   "Packages to install from melpa-unstable.")
 
 (defvar melpa-stable-banned-packages nil
@@ -270,6 +273,7 @@
 (require-package 'yasnippet)
 (require-package 'company)
 (require-package 'company-c-headers)
+(require-package 'company-statistics)
 (require-package 'elpy)
 (require-package 'legalese)
 (require-package 'simple-httpd)
@@ -308,8 +312,11 @@
 (require-package 'evil-nerd-commenter)
 (require-package 'evil-surround)
 (require-package 'evil-visualstar)
+(require-package 'evil-lion)
 (require-package 'slime)
 (require-package 'counsel-css)
+(require-package 'auto-package-update)
+(require-package 'keyfreq)
 ;; {{ @see https://pawelbx.github.io/emacs-theme-gallery/
 (when *emacs24* (require-package 'color-theme))
 (when *emacs25*
@@ -341,5 +348,8 @@
   (require-package 'badger-theme)
   (require-package 'distinguished-theme))
 ; }}
+
+;; kill buffer without my confirmation
+(setq kill-buffer-query-functions (delq 'process-kill-buffer-query-function kill-buffer-query-functions))
 
 (provide 'init-elpa)
