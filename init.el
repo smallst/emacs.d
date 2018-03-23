@@ -154,7 +154,8 @@
   (eval-after-load 'flymake '(require 'flymake-cursor))
   (require-init 'ox-bibtex)
   (require-init 'init-pdf)
-  (if (or (display-graphic-p) (string-match-p "256color"(getenv "TERM"))) (require-init 'init-color-theme))
+  ;; (if (or (display-graphic-p) (string-match-p "256color"(getenv "TERM"))) (require-init 'init-color-theme))
+  (require-init 'init-color-theme)
 
   (require-init 'init-emacs-w3m)
   (require-init 'init-hydra)
