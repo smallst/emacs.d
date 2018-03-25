@@ -118,7 +118,7 @@
   (require-init 'init-gud)
   (require-init 'init-linum-mode)
   ;; (require-init 'init-gist)
-  (require-init 'init-moz)
+  ;; (require-init 'init-moz)
   (require-init 'init-gtags)
   ;; init-evil dependent on init-clipboard
   (require-init 'init-clipboard)
