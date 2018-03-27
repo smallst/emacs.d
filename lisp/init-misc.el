@@ -378,7 +378,7 @@ See \"Reusing passwords for several connections\" from INFO.
 ;; {{ show email sent by `git send-email' in gnus
 (eval-after-load 'gnus
   '(progn
-     (require 'gnus-article-treat-patch)
+     (local-require 'gnus-article-treat-patch)
      (setq gnus-article-patch-conditions
            '( "^@@ -[0-9]+,[0-9]+ \\+[0-9]+,[0-9]+ @@" ))
      ))
@@ -671,7 +671,6 @@ If no region is selected. You will be asked to use `kill-ring' or clipboard inst
                      ((string= choice "kill-ring")
                       (car kill-ring))
                      ((string= choice "clipboard")
-                      (unless (featurep 'simpleclip) (require 'simpleclip))
                       (my-gclip)))))
           (with-temp-file fb
             (insert txt)))))
@@ -736,6 +735,7 @@ If no region is selected. You will be asked to use `kill-ring' or clipboard inst
 
 ;; {{ auto-save.el
 (local-require 'auto-save)
+(add-to-list 'auto-save-exclude 'file-too-big-p t)
 (auto-save-enable)
 (setq auto-save-slient t)
 ;; }}
@@ -926,6 +926,17 @@ If no region is selected. You will be asked to use `kill-ring' or clipboard inst
 (setq session-save-file (expand-file-name "~/.emacs.d/.session"))
 (add-hook 'after-init-hook 'session-initialize)
 ;; }}
+
+(defun optimize-emacs-startup ()
+  "Speedup emacs startup by compiling."
+  (interactive)
+  (let* ((dir (file-truename "~/.emacs.d/lisp/"))
+         (files (directory-files dir)))
+    (load (file-truename "~/.emacs.d/init.el"))
+    (dolist (f files)
+      (when (string-match-p ".*\.el$" f)
+        (let* ((default-directory dir))
+          (byte-compile-file (file-truename f) t))))))
 
 ;; random color theme
 (defun random-color-theme ()
