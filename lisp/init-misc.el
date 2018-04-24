@@ -941,6 +941,12 @@ If no region is selected. You will be asked to use `kill-ring' or clipboard inst
 (add-hook 'adoc-mode-hook 'adoc-mode-hook-setup)
 ;; }}
 
+(eval-after-load 'compile
+  '(progn
+     (add-to-list 'compilation-error-regexp-alist-alist
+                  (list 'mocha "at [^()]+ (\\([^:]+\\):\\([^:]+\\):\\([^:]+\\))" 1 2 3))
+     (add-to-list 'compilation-error-regexp-alist 'mocha)))
+
 ;; ;; useless and hard to debug
 ;; (defun optimize-emacs-startup ()
 ;;   "Speedup emacs startup by compiling."
@@ -984,5 +990,16 @@ If no region is selected. You will be asked to use `kill-ring' or clipboard inst
   (interactive)
   (if (display-graphic-p) (switch-to-ansi-term)
     (suspend-frame)))
+
+;; {{emms
+(require 'emms-setup)
+(emms-all)
+(setq emms-player-list '(emms-player-mplayer-playlist
+                         emms-player-mplayer
+                         emms-player-mpg321
+                         emms-player-ogg123
+                         lemms-player-vlc
+                         emms-player-vlc-playlist))
+;; }}
 
 (provide 'init-misc)
