@@ -95,7 +95,6 @@
   (require-init 'init-org-protocol)
   (require-init 'init-spelling)
   (require-init 'init-gui-frames)
-  (require-init 'init-ido)
   (require-init 'init-uniquify)
   (require-init 'init-ibuffer)
   (require-init 'init-git)

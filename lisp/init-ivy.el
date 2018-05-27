@@ -1,5 +1,5 @@
 (require 'counsel)
-;; (ivy-mode 1)
+(ivy-mode 1) ;; magit needs this
 ;; not good experience
 ;; (setq ivy-use-virtual-buffers t)
 (global-set-key (kbd "C-c C-r") 'ivy-resume)
@@ -21,17 +21,23 @@
                       (read-string hint)))))
     keyword))
 
-(defun my-counsel-recentf ()
-  "Find a file on `recentf-list'."
-  (interactive)
+(defun my-counsel-recentf (&optional n)
+  "Find a file on `recentf-list'.
+If N is not nil, only list files in current project."
+  (interactive "P")
   (require 'recentf)
   (recentf-mode)
-  (ivy-read "Recentf: " (mapcar #'substring-no-properties recentf-list)
-            :initial-input (if (region-active-p) (my-selected-str))
-            :action (lambda (f)
-                      (with-ivy-window
-                       (find-file f)))
-            :caller 'counsel-recentf))
+  (let* ((files (mapcar #'substring-no-properties recentf-list))
+         (root-dir (if (ffip-project-root) (file-truename (ffip-project-root)))))
+    (when (and n root-dir)
+      (setq files (delq nil (mapcar (lambda (f) (path-in-directory-p f root-dir)) files))))
+    (ivy-read "Recentf: "
+              files
+              :initial-input (if (region-active-p) (my-selected-str))
+              :action (lambda (f)
+                        (with-ivy-window
+                          (find-file f)))
+              :caller 'counsel-recentf)))
 
 (defmacro counsel-git-grep-or-find-api (fn git-cmd hint no-keyword)
   "Apply FN on the output lines of GIT-CMD.  HINT is hint when user input.
@@ -186,16 +192,20 @@ Or else, find files since 24 weeks (6 months) ago."
                           (kill-new val)
                           (message "%s => kill-ring" val)))))
 
-(defun counsel-recent-dir ()
-  "Goto recent directories."
-  (interactive)
+(defun counsel-recent-directory (&optional n)
+  "Goto recent directories.
+If N is not nil, only list directories in current project."
+  (interactive "P")
   (unless recentf-mode (recentf-mode 1))
   (let* ((cands (delete-dups
                       (append my-dired-directory-history
                               (mapcar 'file-name-directory recentf-list)
                               ;; fasd history
                               (if (executable-find "fasd")
-                                  (split-string (shell-command-to-string "fasd -ld") "\n" t))))))
+                                  (nonempty-lines (shell-command-to-string "fasd -ld"))))))
+         (root-dir (if (ffip-project-root) (file-truename (ffip-project-root)))))
+    (when (and n root-dir)
+      (setq cands (delq nil (mapcar (lambda (f) (path-in-directory-p f root-dir)) cands))))
     (ivy-read "directories:" cands :action 'dired)))
 
 (defun ivy-occur-grep-mode-hook-setup ()
@@ -205,6 +215,7 @@ Or else, find files since 24 weeks (6 months) ago."
   (column-number-mode -1)
   ;; turn on wgrep right now
   ;; (ivy-wgrep-change-to-wgrep-mode) ; doesn't work, don't know why
+  (local-set-key (kbd "RET") #'ivy-occur-press-and-switch)
   )
 (add-hook 'ivy-occur-grep-mode-hook 'ivy-occur-grep-mode-hook-setup)
 
@@ -302,5 +313,23 @@ If N is nil, use `ivy-mode' to browse the `kill-ring'."
 (setq ivy-re-builders-alist
       '((t . re-builder-pinyin)))
 ;; }}
+
+;; @see https://oremacs.com/2015/07/23/ivy-multiaction/
+;; press "M-o" to choose ivy action
+(ivy-set-actions
+ 'counsel-find-file
+ '(("j" find-file-other-frame "other frame")
+   ("b" counsel-find-file-cd-bookmark-action "cd bookmark")
+   ("x" counsel-find-file-extern "open externally")
+   ("d" delete-file "delete")
+   ("r" counsel-find-file-as-root "open as root")))
+
+;; set actions when running C-x b
+;; replace "frame" with window to open in new window
+(ivy-set-actions
+ 'ivy-switch-buffer-by-pinyin
+ '(("j" switch-to-buffer-other-frame "other frame")
+   ("k" kill-buffer "kill")
+   ("r" ivy--rename-buffer-action "rename")))
 
 (provide 'init-ivy)
