@@ -97,7 +97,6 @@
   (require-init 'init-gui-frames)
   (require-init 'init-uniquify)
   (require-init 'init-ibuffer)
-  (require-init 'init-git)
   (require-init 'init-ivy)
   (require-init 'init-hippie-expand)
   (require-init 'init-windows)
@@ -116,6 +115,7 @@
   (require-init 'init-cc-mode)
   (require-init 'init-gud)
   (require-init 'init-linum-mode)
+  (require-init 'init-git) ;; git-gutter should be enabled after `display-line-numbers-mode' turned on
   ;; (require-init 'init-gist)
   ;; (require-init 'init-moz)
   (require-init 'init-gtags)
