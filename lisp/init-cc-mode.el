@@ -1,3 +1,5 @@
+;; -*- coding: utf-8; lexical-binding: t; -*-
+
 (defun c-wx-lineup-topmost-intro-cont (langelem)
   (save-excursion
     (beginning-of-line)
@@ -6,7 +8,9 @@
       (c-lineup-topmost-intro-cont langelem))))
 
 ;; avoid default "gnu" style, use more popular one
-(setq c-default-style "linux")
+(setq c-default-style '((java-mode . "java")
+                        (awk-mode . "awk")
+                        (other . "linux")))
 
 (defun fix-c-indent-offset-according-to-syntax-context (key val)
   ;; remove the old element
@@ -45,28 +49,26 @@
 
   (setq cc-search-directories '("." "/usr/include" "/usr/local/include/*" "../*/include" "$WXWIN/include"))
 
+  ;; {{ @see https://github.com/redguardtoo/cpputils-cmake
+  ;; Make sure your project use cmake!
+  ;; Or else, you need comment out below code
+  ;; In theory, you can write your own Makefile for `flyamke-mode' without cmake.
+  ;; Nobody actually does this in real world. So if you don't use cmake, don't turn
+  ;; on `flymake-mode'
+  (flymake-mode 1)
+  (when (and (executable-find "cmake")
+             (not (string-match-p "^\\(/usr/local/include\\|/usr/src/linux/include\\)/.*"
+                                  buffer-file-name)))
+    (cppcm-reload-all))
+  ;; }}
+
   ;; wxWidgets setup
   (c-set-offset 'topmost-intro-cont 'c-wx-lineup-topmost-intro-cont)
 
   (add-to-list 'imenu-generic-expression '(nil "^DEFUN *(\"\\([a-zA-Z0-9-]+\\)" 1))
 
   ;; make a #define be left-aligned
-  (setq c-electric-pound-behavior (quote (alignleft)))
-
-  (when buffer-file-name
-
-    ;; @see https://github.com/redguardtoo/cpputils-cmake
-    ;; Make sure your project use cmake!
-    ;; Or else, you need comment out below code:
-    ;; {{
-    (flymake-mode 1)
-    (if (executable-find "cmake")
-        (if (not (or (string-match "^/usr/local/include/.*" buffer-file-name)
-                     (string-match "^/usr/src/linux/include/.*" buffer-file-name)))
-            (cppcm-reload-all)))
-    ;; }}
-
-    ))
+  (setq c-electric-pound-behavior (quote (alignleft))))
 
 ;; donot use c-mode-common-hook or cc-mode-hook because many major-modes use this hook
 (defun c-mode-common-hook-setup ()

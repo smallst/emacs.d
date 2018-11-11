@@ -1,3 +1,5 @@
+;; -*- coding: utf-8; lexical-binding: t; -*-
+
 ;; may be in an arbitrary order
 (eval-when-compile (require 'cl))
 
@@ -45,7 +47,7 @@
     (imenu--generic-function javascript-common-imenu-regex-list)))
 
 (defun my-common-js-setup ()
-  (unless (featurep 'js-comint) (require 'js-comint)))
+  (local-require 'js-comint))
 
 (defun mo-js-mode-hook ()
   (when (and (not (is-buffer-file-temp)) (not (derived-mode-p 'js2-mode)))
@@ -263,7 +265,6 @@ Merge RLT and EXTRA-RLT, items in RLT has *higher* priority."
     ;; if use node.js we need nice output
     (js2-imenu-extras-mode)
     (setq mode-name "JS2")
-    (unless (featurep 'js2-refactor) (require 'js2-refactor))
     (js2-refactor-mode 1)
     ;; js2-mode has its own syntax linter
     (flymake-mode -1)
@@ -370,16 +371,18 @@ INDENT-SIZE decide the indentation level.
                 "clearTimeout"
                 "command" ; Keysnail
                 "content" ; Keysnail
+                "decodeURI"
                 "define"
                 "describe"
-                "documentRef"
-                "global"
                 "display" ; Keysnail
+                "documentRef"
                 "element"
+                "encodeURI"
                 "expect"
                 "ext" ; Keysnail
                 "fetch"
                 "gBrowser" ; Keysnail
+                "global"
                 "goDoCommand" ; Keysnail
                 "hook" ; Keysnail
                 "inject"
@@ -390,7 +393,9 @@ INDENT-SIZE decide the indentation level.
                 "key" ; Keysnail
                 "ko"
                 "log"
+                "mockStore"
                 "module"
+                "mountWithTheme"
                 "plugins" ; Keysnail
                 "process"
                 "require"

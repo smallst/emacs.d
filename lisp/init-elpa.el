@@ -1,5 +1,4 @@
-;; emacs24 require calling `package-initialize' explicitly
-(require 'package)
+;; -*- coding: utf-8; lexical-binding: t; -*-
 (package-initialize)
 
 ;; List of VISIBLE packages from melpa-unstable (http://melpa.org)
@@ -8,9 +7,11 @@
   '(ace-mc
     color-theme ; emacs24 need this package
     ace-window ; lastest stable is released on year 2014
+    artbollocks-mode
     auto-package-update
     bbdb
     command-log-mode
+    vimrc-mode
     auto-yasnippet
     dumb-jump
     websocket ; to talk to the browser
@@ -55,8 +56,6 @@
     ;; company ; I won't wait another 2 years for stable
     simple-httpd
     dsvn
-    move-text
-    string-edit ; looks magnars don't update stable tag frequently
     findr
     mwe-log-commands
     yaml-mode
@@ -123,7 +122,7 @@
         ))
 
 ;; Un-comment below line if you follow "Install stable version in easiest way"
-;; (setq package-archives '(("myelpa" . "~/projs/myelpa")))
+;; (setq package-archives '(("localelpa" . "~/.emacs.d/localelpa/") ("myelpa" . "~/projs/myelpa/")))
 
 ;;------------------------------------------------------------------------------
 ;; Internal implementation, newbies should NOT touch code below this line!
@@ -186,8 +185,7 @@
 ;; Fire up package.el and ensure the following packages are installed.
 ;;------------------------------------------------------------------------------
 
-;(require-package 'async)
-(require-package 'dash) ; required by string-edit
+(require-package 'async)
 ; color-theme 6.6.1 in elpa is buggy
 (require-package 'auto-compile)
 (require-package 'smex)
@@ -239,9 +237,7 @@
 (require-package 'counsel-bbdb)
 (require-package 'ibuffer-vc)
 (require-package 'less-css-mode)
-(require-package 'move-text)
 (require-package 'command-log-mode)
-(require-package 'page-break-lines)
 (require-package 'regex-tool)
 (require-package 'groovy-mode)
 (require-package 'ruby-compilation)
@@ -264,6 +260,7 @@
 (require-package 'multi-term)
 (require-package 'js-doc)
 (require-package 'js2-mode)
+(require-package 'js2-refactor)
 (require-package 'rjsx-mode)
 (require-package 's)
 ;; js2-refactor requires js2, dash, s, multiple-cursors, yasnippet
@@ -310,17 +307,25 @@
 (require-package 'evil-surround)
 (require-package 'evil-visualstar)
 (require-package 'evil-lion)
+(require-package 'evil-args)
 (require-package 'slime)
 (require-package 'counsel-css)
 (require-package 'auto-package-update)
 (require-package 'keyfreq)
 (require-package 'adoc-mode) ; asciidoc files
 (require-package 'magit) ; Magit 2.12 is the last feature release to support Emacs 24.4.
+(require-package 'shackle)
+(require-package 'toc-org)
+(require-package 'artbollocks-mode)
+(require-package 'elpa-mirror)
 ;; {{ @see https://pawelbx.github.io/emacs-theme-gallery/
-(when *emacs24*
-  (require-package 'color-theme)
-  ;; emms v5.0 need seq
-  (require-package 'seq))
+(require-package 'color-theme)
+;; emms v5.0 need seq
+(require-package 'seq)
+(require-package 'stripe-buffer)
+(require-package 'visual-regexp) ;; Press "M-x vr-*"
+(require-package 'vimrc-mode)
+
 (when *emacs25*
   (require-package 'zenburn-theme)
   (require-package 'color-theme-sanityinc-solarized)

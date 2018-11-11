@@ -1,4 +1,9 @@
+;; -*- coding: utf-8; lexical-binding: t; -*-
+
 ;; Use the system clipboard
+;; @see https://www.emacswiki.org/emacs/CopyAndPaste
+;; So `C-y' could paste from clipbord if you are NOT using emacs-nox
+;; I only use `paste-from-x-clipboard', not `C-y'.
 (setq x-select-enable-clipboard t
       x-select-enable-primary t)
 
@@ -40,6 +45,13 @@ If N is not nil, copy file name and line number."
   (when buffer-file-name
     (copy-yank-str (file-truename buffer-file-name))
     (message "file full path => clipboard & yank ring")))
+
+(defun clipboard-to-kill-ring ()
+  "Copy from clipboard to `kill-ring'."
+  (interactive)
+  (let* ((warning-minimum-level :emergency))
+    (kill-new (my-gclip)))
+  (message "clipboard => kill-ring"))
 
 (defun kill-ring-to-clipboard ()
   "Copy from `kill-ring' to clipboard."
