@@ -86,10 +86,10 @@
     workgroups2
     ox-reveal
     pyim-basedict
-    pdf-tools
     zeal-at-point
     graphviz-dot-mode
     zoutline
+    pdf-tools
     company-c-headers
     company-statistics)
   "Packages to install from melpa-unstable.")
@@ -325,6 +325,7 @@
 (require-package 'stripe-buffer)
 (require-package 'visual-regexp) ;; Press "M-x vr-*"
 (require-package 'vimrc-mode)
+(require-package 'pdf-tools)
 
 (when *emacs25*
   (require-package 'zenburn-theme)
