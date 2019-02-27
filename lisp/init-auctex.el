@@ -27,4 +27,6 @@
           (lambda ()
             (setq TeX-command-extra-options "-shell-escape")))
 (add-hook 'LaTeX-mode-hook 'turn-on-cdlatex)
+(add-hook 'LaTeX-mode-hook 'turn-on-reftex)
+(add-hook 'LaTeX-mode-hook 'turn-on-flyspell)
 (provide 'init-auctex)

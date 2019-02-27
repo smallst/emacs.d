@@ -141,6 +141,7 @@
   (require 'init-caffe-mode)
   (require 'init-dot-mode)
   (require 'init-auctex)
+  (require 'init-rust-mode)
   ;; (eval-after-load 'flymake '(require 'flymake-cursor))
   ;(require 'ox-bibtex)
   (require 'init-pdf)

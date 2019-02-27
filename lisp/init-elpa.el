@@ -74,6 +74,7 @@
     scratch
     session
     flymake-lua
+    flymake-rust
     multi-term
     inflections
     lua-mode
@@ -332,6 +333,7 @@
 (require-package 'visual-regexp) ;; Press "M-x vr-*"
 (require-package 'vimrc-mode)
 (require-package 'pdf-tools)
+(require-package 'cdlatex)
 
 (when *emacs25*
   (require-package 'zenburn-theme)
