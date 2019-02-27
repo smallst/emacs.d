@@ -13,6 +13,19 @@
   (push '(93 . ("[" . "]")) evil-surround-pairs-alist))
 (add-hook 'prog-mode-hook 'evil-surround-prog-mode-hook-setup)
 
+(defun my-find-tag-at-point ()
+  "Find tag or Emacs Lisp function definition at point."
+  (interactive)
+  (unless (featurep 'counsel-etags) (require 'counsel-etags))
+  (cond
+   ((memq major-mode '(emacs-lisp-mode lisp-interaction-mode) )
+    (let* ((fn (car (find-function-read))))
+      (when fn
+        (counsel-etags-push-marker-stack (point-marker))
+        (find-function-do-it fn nil 'switch-to-buffer))))
+   (t
+    (counsel-etags-find-tag-at-point))))
+
 (defun evil-surround-js-mode-hook-setup ()
   ;; ES6
   (push '(?1 . ("{`" . "`}")) evil-surround-pairs-alist)
@@ -258,7 +271,6 @@ If the character before and after CH is space or tab, CH is NOT slash"
         (log-edit-mode . emacs)
         (vc-log-edit-mode . emacs)
         (magit-log-edit-mode . emacs)
-        (inf-ruby-mode . emacs)
         (erc-mode . emacs)
         (neotree-mode . emacs)
         (w3m-mode . emacs)
@@ -296,8 +308,8 @@ If the character before and after CH is space or tab, CH is NOT slash"
 (define-key evil-normal-state-map "Y" (kbd "y$"))
 ;; (define-key evil-normal-state-map (kbd "RET") 'ivy-switch-buffer-by-pinyin) ; RET key is preserved for occur buffer
 (define-key evil-normal-state-map "go" 'goto-char)
-(define-key evil-normal-state-map (kbd "C-]") 'counsel-etags-find-tag-at-point)
-(define-key evil-visual-state-map (kbd "C-]") 'counsel-etags-find-tag-at-point)
+(define-key evil-normal-state-map (kbd "C-]") 'my-find-tag-at-point)
+(define-key evil-visual-state-map (kbd "C-]") 'my-find-tag-at-point)
 (define-key evil-insert-state-map (kbd "C-x C-n") 'evil-complete-next-line)
 (define-key evil-insert-state-map (kbd "C-x C-p") 'evil-complete-previous-line)
 (define-key evil-insert-state-map (kbd "C-]") 'aya-expand)
@@ -424,10 +436,9 @@ If the character before and after CH is space or tab, CH is NOT slash"
        "rv" 'evilmr-replace-in-defun
        "rb" 'evilmr-replace-in-buffer
        "ts" 'evilmr-tag-selected-region ;; recommended
-       "tua" 'artbollocks-mode
        "cby" 'cb-switch-between-controller-and-view
        "cbu" 'cb-get-url-from-controller
-       "ht" 'counsel-etags-find-tag-at-point ; better than find-tag C-]
+       "ht" 'my-find-tag-at-point ; better than find-tag C-]
        "rt" 'counsel-etags-recent-tag
        "ft" 'counsel-etags-find-tag
        "mm" 'counsel-bookmark-goto
@@ -462,7 +473,6 @@ If the character before and after CH is space or tab, CH is NOT slash"
        "ls" 'highlight-symbol
        "lq" 'highlight-symbol-query-replace
        "ln" 'highlight-symbol-nav-mode ; use M-n/M-p to navigation between symbols
-       "bm" 'pomodoro-start ;; beat myself
        "ii" 'counsel-imenu
        "ij" 'rimenu-jump
        "." 'evil-ex
@@ -490,14 +500,19 @@ If the character before and after CH is space or tab, CH is NOT slash"
                 (counsel-etags-grep))
                ((= n 1)
                 ;; grep references of current web component
-                (counsel-etags-grep (format "<%s" (file-name-base buffer-file-name))))
+                ;; component could be inside styled-component like `const c = styled(Comp1)`
+                (let* ((fb (file-name-base buffer-file-name)))
+                  (counsel-etags-grep (format "(<%s( *$| [^ ])|styled\\\(%s\\))" fb fb))))
                ((= n 2)
                 ;; grep web component attribute name
                 (counsel-etags-grep (format "^ *%s[=:]" (or (thing-at-point 'symbol)
                                                             (read-string "Component attribute name?")))))
                ((= n 3)
-                ;; grep current file name base
-                (counsel-etags-grep (format "%s" (file-name-nondirectory buffer-file-name))))))
+                ;; grep current file name
+                (counsel-etags-grep (format ".*%s" (file-name-nondirectory buffer-file-name))))
+               ((= n 4)
+                ;; grep js files which is imported
+                (counsel-etags-grep (format "from .*%s('|\\\.js');?" (file-name-base (file-name-nondirectory buffer-file-name)))))))
        "dd" 'counsel-etags-grep-symbol-at-point
        "xc" 'save-buffers-kill-terminal
        "rr" 'my-counsel-recentf
@@ -560,16 +575,16 @@ If the character before and after CH is space or tab, CH is NOT slash"
        "bj" 'buf-move-down
        "bh" 'buf-move-left
        "bl" 'buf-move-right
-       "0" 'select-window-0
-       "1" 'select-window-1
-       "2" 'select-window-2
-       "3" 'select-window-3
-       "4" 'select-window-4
-       "5" 'select-window-5
-       "6" 'select-window-6
-       "7" 'select-window-7
-       "8" 'select-window-8
-       "9" 'select-window-9
+       "0" 'winum-select-window-0-or-10
+       "1" 'winum-select-window-1
+       "2" 'winum-select-window-2
+       "3" 'winum-select-window-3
+       "4" 'winum-select-window-4
+       "5" 'winum-select-window-5
+       "6" 'winum-select-window-6
+       "7" 'winum-select-window-7
+       "8" 'winum-select-window-8
+       "9" 'winum-select-window-9
        "xm" 'my-M-x
        "xx" 'er/expand-region
        "xf" 'counsel-find-file
@@ -618,7 +633,6 @@ If the character before and after CH is space or tab, CH is NOT slash"
        "jj" 'scroll-other-window-up
        "rt" 'random-color-theme
        "yy" 'hydra-launcher/body
-       "hh" 'multiple-cursors-hydra/body
        "gi" 'gist-region ; only workable on my computer
        "tt" 'my-toggle-indentation
        "gg" 'magit-status
@@ -649,13 +663,7 @@ If the character before and after CH is space or tab, CH is NOT slash"
        "us" 'gud-step
        "ui" 'gud-stepi
        "uc" 'gud-cont
-       "uf" 'gud-finish
-       "ma" 'mc/mark-all-like-this-dwim
-       "md" 'mc/mark-all-like-this-in-defun
-       "mm" 'ace-mc-add-multiple-cursors
-       "mn" 'mc/mark-next-like-this
-       "ms" 'mc/skip-to-next-like-this
-       "me" 'mc/edit-lines)
+       "uf" 'gud-finish)
 
 ;; per-major-mode setup
 (general-define-key :states '(normal motion insert emacs)
@@ -775,20 +783,27 @@ If the character before and after CH is space or tab, CH is NOT slash"
 ;; {{ evil-nerd-commenter
 (evilnc-default-hotkeys t)
 
+(defun my-current-line-html-p (paragraph-region)
+  (let* ((line (buffer-substring-no-properties (line-beginning-position)
+                                               (line-end-position)))
+         (re (format "^[ \t]*\\(%s\\)?[ \t]*</?[a-zA-Z]+"
+                     (regexp-quote evilnc-html-comment-start))))
+    ;; current paragraph does contain html tag
+    (if (and (>= (point) (car paragraph-region))
+             (string-match-p re line))
+        t)))
+
 (defun my-evilnc-comment-or-uncomment-paragraphs (&optional num)
   "Comment or uncomment NUM paragraphs which might contain html tags."
   (interactive "p")
   (unless (featurep 'evil-nerd-commenter) (require 'evil-nerd-commenter))
   (let* ((paragraph-region (evilnc--get-one-paragraph-region))
-         (html-p (save-excursion
-                   (sgml-skip-tag-backward 1)
-                   (let* ((line (buffer-substring-no-properties (line-beginning-position)
-                                                                (line-end-position))))
-                     ;; current paragraph does contain html tag
-                     (if (and (>= (point) (car paragraph-region))
-                              (string-match-p (format "^[ \t]*\\(%s\\)?[ \t]*<[a-zA-Z]+"
-                                                      (regexp-quote evilnc-html-comment-start)) line))
-                         t)))))
+         (html-p (or (save-excursion
+                       (sgml-skip-tag-backward 1)
+                       (my-current-line-html-p paragraph-region))
+                     (save-excursion
+                       (sgml-skip-tag-forward 1)
+                       (my-current-line-html-p paragraph-region)))))
     (if html-p (evilnc-comment-or-uncomment-html-paragraphs num)
       (evilnc-comment-or-uncomment-paragraphs num))))
 
@@ -879,19 +894,6 @@ If the character before and after CH is space or tab, CH is NOT slash"
              (add-hook (quote ,(intern (concat m "-mode-hook"))) #'evil-normalize-keymaps))))
 
      (adjust-major-mode-keymap-with-evil "git-timemachine")
-
-     ;; {{ multiple-cursors
-     ;; step 1, select thing in visual-mode (OPTIONAL)
-     ;; step 2, `mc/mark-all-like-dwim' or `mc/mark-all-like-this-in-defun'
-     ;; step 3, `ace-mc-add-multiple-cursors' to remove cursor, press RET to confirm
-     ;; step 4, press s or S to start replace
-     ;; step 5, press C-g to quit multiple-cursors
-     (define-key evil-visual-state-map (kbd "mn") 'mc/mark-next-like-this)
-     (define-key evil-visual-state-map (kbd "ma") 'mc/mark-all-like-this-dwim)
-     (define-key evil-visual-state-map (kbd "md") 'mc/mark-all-like-this-in-defun)
-     (define-key evil-visual-state-map (kbd "mm") 'ace-mc-add-multiple-cursors)
-     (define-key evil-visual-state-map (kbd "ms") 'ace-mc-add-single-cursor)
-     ;; }}
 
      ;; @see https://bitbucket.org/lyro/evil/issue/342/evil-default-cursor-setting-should-default
      ;; Cursor is alway black because of evil.

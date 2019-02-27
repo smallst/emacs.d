@@ -330,10 +330,7 @@
   "Erase the content of the *Messages* buffer in emacs.
 Keep the last num lines if argument num if given."
   (interactive "p")
-  (let* ((buf (cond
-               ((eq 'ruby-mode major-mode) "*server*")
-               (t "*Messages*"))))
-    (erase-specific-buffer num buf)))
+  (erase-specific-buffer num "*Messages*"))
 
 ;; turn off read-only-mode in *Message* buffer, a "feature" in v24.4
 (when (fboundp 'messages-buffer-mode)
@@ -455,9 +452,23 @@ Keep the last num lines if argument num if given."
 (global-set-key (kbd "C-x o") 'ace-window)
 
 ;; {{ move focus between sub-windows
-(local-require 'window-numbering)
-(custom-set-faces '(window-numbering-face ((t (:foreground "DeepPink" :underline "DeepPink" :weight bold)))))
-(window-numbering-mode 1)
+(setq winum-keymap
+    (let ((map (make-sparse-keymap)))
+      (define-key map (kbd "M-0") 'winum-select-window-0-or-10)
+      (define-key map (kbd "M-1") 'winum-select-window-1)
+      (define-key map (kbd "M-2") 'winum-select-window-2)
+      (define-key map (kbd "M-3") 'winum-select-window-3)
+      (define-key map (kbd "M-4") 'winum-select-window-4)
+      (define-key map (kbd "M-5") 'winum-select-window-5)
+      (define-key map (kbd "M-6") 'winum-select-window-6)
+      (define-key map (kbd "M-7") 'winum-select-window-7)
+      (define-key map (kbd "M-8") 'winum-select-window-8)
+      map))
+(require 'winum)
+(setq winum-format "%s")
+(setq winum-mode-line-position 0)
+(set-face-attribute 'winum-face nil :foreground "DeepPink" :underline "DeepPink" :weight 'bold)
+(winum-mode)
 ;; }}
 
 (ace-pinyin-global-mode +1)
@@ -742,6 +753,7 @@ If no region is selected. You will be asked to use `kill-ring' or clipboard inst
 ;; flymake
 (eval-after-load 'flymake
   '(progn
+     (remove-hook 'flymake-diagnostic-functions 'flymake-proc-legacy-flymake)
      (setq flymake-gui-warnings-enabled nil)))
 
 ;; {{ check attachments
@@ -975,9 +987,17 @@ If no region is selected. You will be asked to use `kill-ring' or clipboard inst
 
 (transient-mark-mode t)
 
-(global-auto-revert-mode)
-(setq global-auto-revert-non-file-buffers t
-      auto-revert-verbose nil)
+(unless (or *cygwin* *win64*)
+  ;; Takes ages to start Emacs.
+  ;; Got error `Socket /tmp/fam-cb/fam- has wrong permissions` in Cygwin ONLY!
+  ;; reproduced with Emacs 26.1 and Cygwin upgraded at 2019-02-26
+  ;;
+  ;; Although win64 is fine. It still slows down generic performance.
+  ;; @see https://stackoverflow.com/questions/3589535/why-reload-notification-slow-in-emacs-when-files-are-modified-externally
+  ;; So no auto-revert-mode on Windows/Cygwin
+  (global-auto-revert-mode)
+  (setq global-auto-revert-non-file-buffers t
+        auto-revert-verbose nil))
 
 (add-to-list 'auto-mode-alist '("\\.[Cc][Ss][Vv]\\'" . csv-mode))
 
@@ -988,7 +1008,7 @@ If no region is selected. You will be asked to use `kill-ring' or clipboard inst
 (put 'narrow-to-page 'disabled nil)
 (put 'narrow-to-defun 'disabled nil)
 
-;; But don't show trailing whitespace in SQLi, inf-ruby etc.
+;; But don't show trailing whitespace in REPL.
 (add-hook 'comint-mode-hook
           (lambda () (setq show-trailing-whitespace nil)))
 
@@ -1244,5 +1264,9 @@ Including indent-buffer, which should not be called automatically on save."
      (setq-default mode-line-format
               (cons '(pomodoro-mode-line-string pomodoro-mode-line-string)
                     mode-line-format))))
+
+(unless (featurep 'pomodoro)
+  (require 'pomodoro)
+  (pomodoro-add-to-mode-line))
 
 (provide 'init-misc)
