@@ -15,6 +15,7 @@
   '(color-theme ; emacs24 need this package
     ace-window ; lastest stable is released on year 2014
     auto-package-update
+    nov
     bbdb
     evil-textobj-syntax
     command-log-mode
@@ -83,7 +84,6 @@
     inflections
     lua-mode
     pomodoro
-    auto-compile
     packed
     keyfreq
     gitconfig-mode
@@ -206,8 +206,7 @@ You still need modify `package-archives' in \"init-elpa.el\" to PERMANENTLY use 
 
 (require-package 'async)
 ; color-theme 6.6.1 in elpa is buggy
-(require-package 'auto-compile)
-(require-package 'smex)
+(require-package 'amx)
 (require-package 'avy)
 (require-package 'auto-yasnippet)
 (require-package 'ace-link)
@@ -248,7 +247,6 @@ You still need modify `package-archives' in \"init-elpa.el\" to PERMANENTLY use 
 (require-package 'find-file-in-project)
 (require-package 'counsel-bbdb)
 (require-package 'ibuffer-vc)
-(require-package 'less-css-mode)
 (require-package 'command-log-mode)
 (require-package 'regex-tool)
 (require-package 'groovy-mode)
@@ -320,7 +318,6 @@ You still need modify `package-archives' in \"init-elpa.el\" to PERMANENTLY use 
 (require-package 'auto-package-update)
 (require-package 'keyfreq)
 (require-package 'adoc-mode) ; asciidoc files
-(require-package 'magit) ; Magit 2.12 is the last feature release to support Emacs 24.4.
 (require-package 'shackle)
 (require-package 'toc-org)
 (require-package 'elpa-mirror)
@@ -333,8 +330,10 @@ You still need modify `package-archives' in \"init-elpa.el\" to PERMANENTLY use 
 (require-package 'vimrc-mode)
 (require-package 'pdf-tools)
 (require-package 'cdlatex)
+(require-package 'nov) ; read epub
 
 (when *emacs25*
+  (require-package 'magit) ; Magit 2.12 is the last feature release to support Emacs 24.4.
   (require-package 'zenburn-theme)
   (require-package 'color-theme-sanityinc-solarized)
   (require-package 'color-theme-sanityinc-tomorrow)
