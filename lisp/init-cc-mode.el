@@ -36,7 +36,7 @@
   ;; google "C/C++/Java code indentation in Emacs" for more advanced skills
   ;; C code:
   ;;   if(1) // press ENTER here, zero means no indentation
-  (fix-c-indent-offset-according-to-syntax-context 'substatement 0)
+  (fix-c-indent-offset-according-to-syntax-context 'substatement +)
   ;;   void fn() // press ENTER here, zero means no indentation
   (fix-c-indent-offset-according-to-syntax-context 'func-decl-cont 0))
 
@@ -88,13 +88,13 @@
       (eldoc-mode 1))
     (defun myself-cc-mode-hook ()
       (set (make-local-variable 'my-exec-command)
-           (let ((myfile (if cppcm-build-dir
+           (let ((myfile (if (boundp 'cppcm-build-dir)
                              (cppcm-get-exe-path-current-buffer)
                            (file-name-sans-extension buffer-file-name))))
              (format "%s;echo Press any key to continue;read -n"
                      myfile)))
       (set (make-local-variable 'my-gdb-command)
-           (let ((myfile (if cppcm-build-dir
+           (let ((myfile (if (boundp 'cppcm-build-dir)
                              (cppcm-get-exe-path-current-buffer)
                            (file-name-sans-extension buffer-file-name))))
              (format "gdb -i=mi %s"
@@ -104,7 +104,7 @@
       (global-set-key (kbd "S-<f8>") 'myself-exec-withargs))
     (global-set-key (kbd "C-<f8>") 'myself-gdb)
     (defun myself-c-mode-hook ()
-      (if cppcm-src-dir
+      (if (boundp 'cppcm-src-dir)
           (set (make-local-variable 'my-compile-command)
                compile-command)
         (set (make-local-variable 'my-compile-command)
@@ -125,7 +125,7 @@
       ;;                myfile)))
       )
     (defun myself-c++-mode-hook ()
-      (if cppcm-src-dir
+      (if (boundp 'cppcm-src-dir)
           (set (make-local-variable 'my-compile-command)
                compile-command)
         (set (make-local-variable 'my-compile-command)
@@ -157,7 +157,7 @@
       )
     (defun myself-exec-withargs ()
       (interactive
-       (let ((command-args (read-shell-command "exec:" (let ((myfile (if cppcm-build-dir
+       (let ((command-args (read-shell-command "exec:" (let ((myfile (if (boundp 'cppcm-build-dir)
                                                                          (cppcm-get-exe-path-current-buffer)
                                                                        (file-name-sans-extension buffer-file-name))))
                                                          myfile))))
