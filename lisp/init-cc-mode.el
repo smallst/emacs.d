@@ -36,7 +36,7 @@
   ;; google "C/C++/Java code indentation in Emacs" for more advanced skills
   ;; C code:
   ;;   if(1) // press ENTER here, zero means no indentation
-  (fix-c-indent-offset-according-to-syntax-context 'substatement +)
+  (fix-c-indent-offset-according-to-syntax-context 'substatement '+)
   ;;   void fn() // press ENTER here, zero means no indentation
   (fix-c-indent-offset-according-to-syntax-context 'func-decl-cont 0))
 
@@ -85,7 +85,7 @@
                                     (shell-command-to-string "global -p"))))
       ;; emacs 24.4+ will set up eldoc automatically.
       ;; so below code is NOT needed.
-      (eldoc-mode 1))
+      )
     (defun myself-cc-mode-hook ()
       (set (make-local-variable 'my-exec-command)
            (let ((myfile (if (boundp 'cppcm-build-dir)
