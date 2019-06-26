@@ -335,7 +335,9 @@ INDENT-SIZE decide the indentation level.
   (js-clear)
   (js-send-buffer))
 ;; }}
-
+(defun inferior-js-mode-hook-setup ()
+  (add-hook 'comint-output-filter-functions 'js-comint-process-output))
+(add-hook 'inferior-js-mode-hook 'inferior-js-mode-hook-setup t)
 ;; Latest rjsx-mode does not have indentation issue
 ;; @see https://emacs.stackexchange.com/questions/33536/how-to-edit-jsx-react-files-in-emacs
 
