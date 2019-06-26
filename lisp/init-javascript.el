@@ -21,6 +21,7 @@
         ("Filter" "[. \t]filter([ \t]*['\"]\\([^'\"]+\\)" 1)
         ("State" "[. \t]state[(:][ \t]*['\"]\\([^'\"]+\\)" 1)
         ("Factory" "[. \t]factory([ \t]*['\"]\\([^'\"]+\\)" 1)
+        ("Global" "^\\(export const\\|const\\) \\([a-zA-Z][a-zA-Z0-9]*\\) =" 2)
         ("Service" "[. \t]service([ \t]*['\"]\\([^'\"]+\\)" 1)
         ("Module" "[. \t]module( *['\"]\\([a-zA-Z0-9_.]+\\)['\"], *\\[" 1)
         ("ngRoute" "[. \t]when(\\(['\"][a-zA-Z0-9_\/]+['\"]\\)" 1)
@@ -275,24 +276,31 @@ Merge RLT and EXTRA-RLT, items in RLT has *higher* priority."
 
 (add-hook 'js2-mode-hook 'my-js2-mode-setup)
 
-(setq auto-mode-alist (cons '("\\.json$" . js-mode) auto-mode-alist))
-(setq auto-mode-alist (cons '("\\.jason$" . js-mode) auto-mode-alist))
-(setq auto-mode-alist (cons '("\\.jshintrc$" . js-mode) auto-mode-alist))
+(add-auto-mode 'js-mode
+               "\\.ja?son$"
+               "\\.pac$"
+               "\\.jshintrc$")
 
 (cond
  ((not *no-memory*)
-  (setq auto-mode-alist (cons '("\\.ts\\'" . js2-mode) auto-mode-alist))
-  (setq auto-mode-alist (cons '("\\.js\\(\\.erb\\)?\\'" . js2-mode) auto-mode-alist))
-  ;; facebook ReactJS, use Emacs25 to fix component indentation problem
-  ;; @see https://github.com/mooz/js2-mode/issues/291
-  (add-to-list 'auto-mode-alist '("\\.jsx\\'" . rjsx-mode))
-  (add-to-list 'auto-mode-alist '("components\\/.*\\.js\\'" . rjsx-mode))
-  (add-to-list 'auto-mode-alist '("\\.mock.js\\'" . js-mode))
+  ;; javascript
+  (add-auto-mode 'js2-mode
+                 "\\.js\\(\\.erb\\)?\\'")
+  ;; JSX
+  (add-auto-mode 'rjsx-mode
+                 "\\.jsx\\'"
+                 "components\\/.*\\.js\\'")
+  ;; mock file
+  (add-auto-mode 'js-mode
+                 "\\.mock.js\\'")
   (add-to-list 'interpreter-mode-alist (cons "node" 'js2-mode)))
  (t
-  (setq auto-mode-alist (cons '("\\.js\\(\\.erb\\)?\\'" . js-mode) auto-mode-alist))
-  (setq auto-mode-alist (cons '("\\.ts\\'" . js-mode) auto-mode-alist))))
-(add-to-list 'auto-mode-alist '("\\.babelrc\\'" . js-mode))
+  (add-auto-mode 'js-mode
+                 "\\.js\\(\\.erb\\)?\\'"
+                 "\\.babelrc\\'")))
+
+(add-auto-mode 'typescript-mode
+               "\\.ts$")
 
 ;; @see https://github.com/felipeochoa/rjsx-mode/issues/33
 (eval-after-load 'rjsx-mode

@@ -10,8 +10,6 @@
 ;; kill-ring and clipboard are same? No, it's annoying!
 (setq save-interprogram-paste-before-kill nil)
 
-;; you need install xsel under Linux
-;; xclip has some problem when copying under Linux
 (defun copy-yank-str (msg &optional clipboard-only)
   (unless clipboard-only (kill-new msg))
   (my-pclip msg)
@@ -72,7 +70,7 @@ If N is not nil, copy file name and line number."
   "If NUM equals 1, copy the downcased string.
 If NUM equals 2, copy the captalized string.
 If NUM equals 3, copy the upcased string.
-If NUM equals 4, kill-ring => clipboard."
+If NUM equals 4, indent 4 spaces."
   (interactive "P")
   (let* ((thing (my-use-selected-string-or-ask "")))
     (if (region-active-p) (deactivate-mark))
@@ -85,7 +83,8 @@ If NUM equals 4, kill-ring => clipboard."
      ((= num 3)
       (setq thing (upcase thing)))
      ((= num 4)
-      (setq thing (car kill-ring)))
+      (setq thing (string-trim-right (concat "    "
+                                             (mapconcat 'identity (split-string thing "\n") "\n    ")))))
      (t
       (message "C-h f copy-to-x-clipboard to find right usage")))
 

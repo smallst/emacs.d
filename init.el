@@ -54,8 +54,6 @@
   `(unless (featurep ,pkg)
      (load (expand-file-name
              (cond
-               ((eq ,pkg 'bookmark+)
-                (format "~/.emacs.d/site-lisp/bookmark-plus/%s" ,pkg))
                ((eq ,pkg 'go-mode-load)
                 (format "~/.emacs.d/site-lisp/go-mode/%s" ,pkg))
                (t
@@ -74,12 +72,20 @@
 ;; ("\\`/:" . file-name-non-special))
 ;; Which means on every .el and .elc file loaded during start up, it has to runs those regexps against the filename.
 (let* ((file-name-handler-alist nil))
+  (require 'init-elpa)
+
+  ;; ;; {{
+  ;; (require 'benchmark-init-modes)
+  ;; (require 'benchmark-init)
+  ;; (benchmark-init/activate)
+  ;; ;; `benchmark-init/show-durations-tree' to show benchmark result
+  ;; ;; }}
+
+  (require 'init-autoload)
   ;; `package-initialize' takes 35% of startup time
   ;; need check https://github.com/hlissner/doom-emacs/wiki/FAQ#how-is-dooms-startup-so-fast for solution
-  (require 'init-autoload)
   (require 'init-modeline)
   (require 'init-utils)
-  (require 'init-elpa)
   (require 'init-exec-path) ;; Set up $PATH
   ;; Any file use flyspell should be initialized after init-spelling.el
   (require 'init-spelling)
@@ -98,7 +104,6 @@
   (require 'init-lisp)
   (require 'init-elisp)
   (require 'init-yasnippet)
-  ;; Use bookmark instead
   (require 'init-cc-mode)
   (require 'init-gud)
   (require 'init-linum-mode)
@@ -147,13 +152,19 @@
   ;; @see https://github.com/hlissner/doom-emacs/wiki/FAQ
   ;; Adding directories under "site-lisp/" to `load-path' slows
   ;; down all `require' statement. So we do this at the end of startup
-  ;; Neither ELPA package nor dependent on "site-lisp/".
+  ;; NO ELPA package is dependent on "site-lisp/".
   (setq load-path (cdr load-path))
   (load (expand-file-name "~/.emacs.d/lisp/init-site-lisp") t t)
 
   ;; my personal setup, other major-mode specific setup need it.
   ;; It's dependent on "~/.emacs.d/site-lisp/*.el"
   (load (expand-file-name "~/.custom.el") t nil)
+
+  ;; {{ `evil-matchit' could use setup in".custom.el"
+  (when my-use-m-for-matchit
+    (setq evilmi-shortcut "m"))
+  (global-evil-matchit-mode 1)
+  ;; }}
 
   ;; @see https://www.reddit.com/r/emacs/comments/4q4ixw/how_to_forbid_emacs_to_touch_configuration_files/
   ;; See `custom-file' for details.
