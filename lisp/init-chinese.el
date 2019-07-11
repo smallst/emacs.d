@@ -1,8 +1,5 @@
 ;; -*- coding: utf-8; lexical-binding: t; -*-
 
-;; use memory efficient pyim engine
-(setq pyim-mapping-file-engine-p t)
-
 ;; {{ make IME compatible with evil-mode
 (defun evil-toggle-input-method ()
   "When input method is on, goto `evil-insert-state'."
@@ -52,28 +49,11 @@
   (file-truename (concat (file-name-as-directory my-pyim-directory)
                          (or dict-name "personal.pyim"))))
 
-(defun my-pyim-export-dictionary ()
-  "Export words you use in pyim into personal dictionary."
-  (interactive)
-  (with-temp-buffer
-    (maphash
-     #'(lambda (key value)
-         ;; only export two character word
-         (if (string-match "-" key)
-             (insert (concat key
-                             " "
-                             (mapconcat #'identity value ""))
-                     "\n")))
-     pyim-dcache-icode2word)
-    (unless (and my-pyim-directory
-                 (file-directory-p my-pyim-directory))
-      (setq my-pyim-directory
-            (read-directory-name "Personal Chinese dictionary directory:")))
-    (if my-pyim-directory
-        (write-file (my-pyim-personal-dict)))))
-
 (eval-after-load 'pyim
   '(progn
+     ;; use memory efficient pyim engine
+     (setq pyim-dcache-backend 'pyim-dregcache)
+
      ;; use western punctuation (ban jiao fu hao)
      ;; (setq pyim-punctuation-dict nil)
      (setq pyim-punctuation-translate-p '(auto yes no))   ;中文使用全角标点，英文使用半角标点。

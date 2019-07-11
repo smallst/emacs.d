@@ -23,8 +23,8 @@
   "对个人词库排序."
   (sort pyim-dregcache-icode2word
         #'(lambda (a b)
-            (> (or (gethash (nth 1 (split-string a " ")) pyim-iword2count) 0)
-               (or (gethash (nth 1 (split-string b " ")) pyim-iword2count) 0)))))
+            (> (or (gethash (nth 1 (split-string a " ")) pyim-dcache-iword2count) 0)
+               (or (gethash (nth 1 (split-string b " ")) pyim-dcache-iword2count) 0)))))
 
 (defun pyim-dregcache-create-cache-content (raw-content)
   (let* (rlt)
@@ -155,13 +155,14 @@
       (setq rlt (nth idx rlt)))
     rlt))
 
-(defun pyim-dregcache-get (code &optional cache-list)
+(defun pyim-dregcache-get (code &optional dcache-list)
   "从 `pyim-dregcache-cache' 搜索 CODE, 得到对应的词条.
-CACHE-LIST 只是符号而已,并不代表真实的缓存数据."
+DCACHE-LIST 只是符号而已,并不代表真实的缓存数据."
   (when pyim-dregcache-cache
     (let* ((pattern (pyim-dregcache-match-line code))
            (dict-files (pyim-dregcache-all-dict-files))
            result)
+      (if pyim-debug (message "pyim-dregcache-get is called. code=%s pattern=%s dict-files=%s" code pattern dict-files))
       (dolist (file dict-files)
         (let* ((case-fold-search t)
                (start 0)
@@ -169,7 +170,6 @@ CACHE-LIST 只是符号而已,并不代表真实的缓存数据."
                (content (pyim-dregcache-get-content file-info code))
                (content-size (length content))
                word)
-          (if pyim-debug (message "pyim-dregcache-get is called. code=%s pattern=%s" code pattern))
           (while (and (< start content-size) (setq start (string-match pattern content start)))
             ;; 提取词
             (setq word (match-string-no-properties 1 content))
