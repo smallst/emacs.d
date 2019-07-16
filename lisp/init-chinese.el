@@ -53,6 +53,8 @@
   '(progn
      ;; use memory efficient pyim engine
      (setq pyim-dcache-backend 'pyim-dregcache)
+     ;; don's use shortcode2word
+     (setq pyim-enable-shortcode nil)
 
      ;; use western punctuation (ban jiao fu hao)
      ;; (setq pyim-punctuation-dict nil)
@@ -61,17 +63,13 @@
      (setq pyim-isearch-enable-pinyin-search t)
      (setq default-input-method "pyim")
 
-     ;; I'm OK with a smaller dictionary
-     (let* ((files (directory-files-and-attributes my-pyim-directory t "\.pyim$") )
-            bigdict-p)
-        (when (> (length files) 0)
+     ;; automatically load all "*.pyim" under "~/.eim/"
+     ;; `directory-files-recursively' requires Emacs 25
+     (let* ((files (directory-files-recursively my-pyim-directory "\.pyim$")))
+       (when (> (length files) 0)
          (setq pyim-dicts
                (mapcar (lambda (f)
-                         (when (> (file-attribute-size (cdr f)) 1 ;; (* 2 1024 1024)
-                                  )
-                           (setq bigdict-p t))
-                         (list :name (file-name-base (car f))
-                               :file (car f)))
+                         (list :name (file-name-base f) :file f))
                        files))))
      (pyim-basedict-enable)
 
@@ -79,9 +77,9 @@
            '(("en" "eng")
              ("in" "ing")))
 
-     ;; You can also set up the great dictionary (80M) the same way as peronsal dictionary
-     ;; great dictionary can be downloaded this way:
-     ;; `curl -L https://github.com/tumashu/pyim-greatdict/raw/master/pyim-greatdict.pyim.gz | zcat > ~/.eim/pyim-greatdict.pyim`
+     ;;  pyim-bigdict is recommended (20M). There are many useless words in pyim-greatdict which also slows
+     ;;  down pyim performance
+     ;; `curl -L http://tumashu.github.io/pyim-bigdict/pyim-bigdict.pyim.gz | zcat > ~/.eim/pyim-bigdict.pyim`
 
      ;; don't use tooltip
      (setq pyim-use-tooltip 'popup)))

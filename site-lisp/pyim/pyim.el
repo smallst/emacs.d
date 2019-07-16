@@ -408,6 +408,12 @@
 
 ;; ** Tips
 
+;; *** 关闭输入联想词功能 (默认开启)
+
+;; #+BEGIN_EXAMPLE
+;; (setq pyim-enable-shortcode nil)
+;; #+END_EXAMPLE
+
 ;; *** 如何将个人词条相关信息导入和导出？
 
 ;; 1. 导入使用命令： pyim-import
@@ -613,6 +619,11 @@ plist 来表示，比如：
 用于和 elpa 格式的词库包集成。"
   :group 'pyim
   :type 'list)
+
+(defcustom pyim-enable-shortcode t
+  "启用输入联想词功能."
+  :group 'pyim
+  :type 'boolean)
 
 (defcustom pyim-punctuation-dict
   '(("'" "‘" "’")
@@ -1228,6 +1239,12 @@ dcache 文件的方法让 pyim 正常工作。")
 (defvar pyim-page-tooltip-posframe-buffer " *pyim-page-tooltip-posframe-buffer*"
   "这个变量用来保存做为 page tooltip 的 posframe 的 buffer.")
 
+(defconst pyim-shuangpin-invalid-pinyin-regexp
+  "^\\([qtghklzcsdn]o\\|[rypfbmw]uo\\|[qj]ong\\|[rtysdghklzxcn]iong\\|[qtypdjlxbnm]uai\\|[ghk]ing?\\|[qjklxn]uang\\|[dgh]iang\\|[qjlx]ua\\|[hkg]ia\\|[rtsdghkzc]v\\|[jl]ui\\)$"
+  "双拼可能自动产生的无效拼音. 例如输入 kk 得到有效拼音 kuai .
+但同时产生了无效拼音 king .  用户手动输入的无效拼音无需考虑.
+因为用户有即时界面反馈,不可能连续输入无效拼音.")
+
 (defvar pyim-rime-limit 50
   "当 pyim 使用 `liberime-search' 来获取词条时，这个变量用来限制
 `liberime-search' 返回词条的数量。")
@@ -1400,8 +1417,7 @@ pyim 是使用 `pyim-start' 来启动输入法，这个命令主要做如下工�
 2. 使用 `pyim-cchar2pinyin-create-cache' 创建汉字到拼音的 hash table 对应表。
 3. 运行hook： `pyim-load-hook'。
 4. 将 `pyim-dcache-save-caches' 命令添加到 `kill-emacs-hook' , emacs 关闭
-之前将用户选择过的词生成的缓存和 `pyim-dcache-iword2count'
-保存到文件，供以后使用。
+之前将用户选择过的词生成的缓存和词频缓存保存到文件，供以后使用。
 5. 设定变量：
 1. `input-method-function'
 2. `deactivate-current-input-method-function'
@@ -1528,13 +1544,12 @@ pyim 使用函数 `pyim-start' 启动输入法的时候，会将变量
 
 (defun pyim-dcache-init-variables ()
   "初始化 dcache 缓存相关变量."
-  (pyim-dcache-set-variable 'pyim-dcache-iword2count) ; used by both dcache and dregcache
   (funcall (pyim-dcache-backend-api "init-variables")))
 
 (defun pyim-dcache-save-caches ()
   "保存 dcache.
 
-将用户选择过的词生成的缓存和 `pyim-dcache-iword2count' 取值
+将用户选择过的词生成的缓存和词频缓存的取值
 保存到它们对应的文件中.
 
 这个函数默认作为 `kill-emacs-hook' 使用。"
@@ -1568,8 +1583,8 @@ pyim 使用函数 `pyim-start' 启动输入法的时候，会将变量
   "从 FILE 中导入词条以及词条对应的词频信息。
 
 MERGE-METHOD 是一个函数，这个函数需要两个数字参数，代表
-词条在 `pyim-dcache-iword2count' 中的词频和待导入文件中的词频，
-函数返回值做为合并后的词频使用，默认方式是：取两个词频的最大值。"
+词条在词频缓存中的词频和待导入文件中的词频，函数返回值做为合并后的词频使用，
+默认方式是：取两个词频的最大值。"
   (interactive "F导入词条相关信息文件: ")
   (with-temp-buffer
     (let ((coding-system-for-read 'utf-8-unix))
@@ -1588,8 +1603,8 @@ MERGE-METHOD 是一个函数，这个函数需要两个数字参数，代表
                     (or x 0)
                     count))))
       (forward-line 1)))
-  ;; 保存一下用户选择过的词生成的缓存和 `pyim-dcache-iword2count'
-  ;; 两个缓存，因为使用 async 机制更新 dcache 时，需要从 dcache 文件
+  ;; 保存一下用户选择过的词生成的缓存和词频缓存，
+  ;; 因为使用 async 机制更新 dcache 时，需要从 dcache 文件
   ;; 中读取变量值, 然后再对用户选择过的词生成的缓存排序，如果没
   ;; 有这一步骤，导入的词条就会被覆盖，使用 emacs-thread 机制来更新 dcache
   ;; 不存在此问题。
@@ -1969,19 +1984,19 @@ Return the input string.
 1. 查询拼音字符串 ENTERED 得到被选词列表 `pyim-candidates'
 2. 设置 `pyim-entered' 变量的取值。
 3. 显示备选词等待用户选择。"
-    (setq pyim-entered entered)
-    (when (and entered
-               (stringp entered)
-               (> (length entered) 0))
-      (when pyim--exhibit-timer (cancel-timer pyim--exhibit-timer))
-      (cond
-       ((or (not pyim-exhibit-delay-ms) (eq pyim-exhibit-delay-ms 0))
-        (pyim-refresh-ui-with-latest-candidates))
-       (t
-        (setq pyim--exhibit-timer
-              (run-with-timer (/ pyim-exhibit-delay-ms 1000.0)
-                              nil
-                              #'pyim-refresh-ui-with-latest-candidates))))))
+  (setq pyim-entered entered)
+  (when (and entered
+             (stringp entered)
+             (> (length entered) 0))
+    (when pyim--exhibit-timer (cancel-timer pyim--exhibit-timer))
+    (cond
+     ((or (not pyim-exhibit-delay-ms) (eq pyim-exhibit-delay-ms 0))
+      (pyim-refresh-ui-with-latest-candidates))
+     (t
+      (setq pyim--exhibit-timer
+            (run-with-timer (/ pyim-exhibit-delay-ms 1000.0)
+                            nil
+                            #'pyim-refresh-ui-with-latest-candidates))))))
 
 (defun pyim-terminate-translation ()
   "Terminate the translation of the current key."
@@ -2057,7 +2072,8 @@ Return the input string.
 
 这个过程通过循环的调用 `pyim-pinyin-get-charpy' 来实现，整个过程
 类似用菜刀切黄瓜片，将一个拼音字符串逐渐切开。"
-  (let (charpy spinyin)
+  (let ((py pinyin)
+        charpy spinyin)
     (while (when (string< "" pinyin)
              (setq charpy (pyim-pinyin-get-charpy pinyin))
              (if (equal (car charpy) '("" . ""))
@@ -2066,7 +2082,12 @@ Return the input string.
                    (setq pinyin ""))
                (setq spinyin (append spinyin (list (car charpy))))
                (setq pinyin (cdr charpy)))))
-    spinyin))
+    (or spinyin
+        ;; 如果无法按照拼音的规则来分解字符串，
+        ;; 就将字符串简单的包装一下，然后返回。
+        ;; 目前这个功能用于： 以u或者i开头的词库 #226
+        ;; https://github.com/tumashu/pyim/issues/226
+        (list (cons "" py)))))
 
 (defun pyim-scheme-get (scheme-name)
   "获取名称为 SCHEME-NAME 的输入法方案。"
@@ -2158,14 +2179,19 @@ Return the input string.
              (sp-sm (when sp-sm (char-to-string sp-sm)))
              (sp-ym (when sp-ym (char-to-string sp-ym)))
              (sm (nth 1 (assoc sp-sm keymaps)))
-             (ym (cdr (cdr (assoc sp-ym keymaps)))))
-        (push (mapcar
-               #'(lambda (x)
-                   (let* ((y (concat sp-sm (or sp-ym " ")))
-                          (z (cadr (assoc y keymaps))))
-                     (if z (cons "" z) (cons sm x))))
-               (or ym (list "")))
-              results)))
+             (ym (or (cdr (cdr (assoc sp-ym keymaps))) (list "")))
+             one-word-pinyins)
+
+        (dolist (x ym)
+          (let* ((y (concat sp-sm (or sp-ym " ")))
+                 (z (cadr (assoc y keymaps)))
+                 (py (if z (cons "" z) (cons sm x))))
+            (unless (string-match-p pyim-shuangpin-invalid-pinyin-regexp
+                                    (concat (car py) (cdr py)))
+              (push py one-word-pinyins))))
+
+        (when (and one-word-pinyins (> (length one-word-pinyins) 0))
+          (push one-word-pinyins results))))
     (pyim-imobjs-find-fuzzy:quanpin
      (pyim-permutate-list (nreverse results)))))
 
@@ -2306,7 +2332,7 @@ IMOBJS 获得候选词条。"
               (remove "" (or (mapcar #'(lambda (x)
                                          (concat str x))
                                      (funcall (pyim-dcache-backend-api "get-code2word-shortcode2word")
-                                      output1))
+                                              output1))
                              (list str))))
         (setq result (append result output3))))
     (when (car result)
@@ -2325,17 +2351,51 @@ IMOBJS 获得候选词条。"
              (candidates (alist-get 'candidates menu)))
         candidates))))
 
+(defun pyim-quanpin-add-common-words (common-words imobj scheme-name)
+  "COMMON-WORDS 和以音标 IMOBJ 找到的新词合并产生候选词.
+SCHEME-NAME 是输入法名字."
+  (let* ((cands (funcall (pyim-dcache-backend-api (if pyim-enable-shortcode
+                                                      "get-code2word-shortcode2word"
+                                                    "get-code2word"))
+                         (mapconcat #'identity
+                                    (pyim-codes-create imobj scheme-name)
+                                    "-")))
+         rlt)
+    (cond
+     ((and (or (eq 1 (length imobj))
+               (eq 2 (length imobj)))
+           (> (length cands) 0)
+           (> (length common-words) 0))
+      (setq common-words (delete-dups common-words))
+      ;; 两个单字或者两字词序列合并,确保常用字词在前面
+      (let* ((size (min (length cands) (length common-words)))
+             (i 0))
+        (while (< i size)
+          (setq rlt (add-to-list 'rlt (nth i cands) t))
+          (setq rlt (add-to-list 'rlt (nth i common-words) t))
+          (setq i (1+ i)))
+        (while (< i (length cands))
+          (setq rlt (add-to-list 'rlt (nth i cands) t))
+          (setq i (1+ i)))
+        (setq i size)
+        (while (< i (length common-words))
+          (setq rlt (add-to-list 'rlt (nth i common-words) t))
+          (setq i (1+ i)))))
+     (t
+      (setq rlt (append common-words cands))))
+    rlt))
+
 (defun pyim-candidates-create:quanpin (imobjs scheme-name)
   "`pyim-candidates-create' 处理全拼输入法的函数."
   (let* (;; 如果输入 "ni-hao" ，搜索 code 为 "n-h" 的词条做为联想词。
          ;; 搜索首字母得到的联想词太多，这里限制联想词要大于两个汉字并且只搜索
          ;; 个人文件。
          (jianpin-words
-          (when (> (length (car imobjs)) 1)
+          (when (and (> (length (car imobjs)) 1) pyim-enable-shortcode)
             (funcall (pyim-dcache-backend-api "get-ishortcode2word")
-             (mapconcat #'identity
-                        (pyim-codes-create (car imobjs) scheme-name 1)
-                        "-"))))
+                     (mapconcat #'identity
+                                (pyim-codes-create (car imobjs) scheme-name 1)
+                                "-"))))
          znabc-words
          pinyin-chars
          personal-words
@@ -2355,16 +2415,15 @@ IMOBJS 获得候选词条。"
     (dolist (imobj imobjs)
       (setq personal-words
             (append personal-words
-                    (funcall (pyim-dcache-backend-api "get-icode2word-ishortcode2word")
+                    (funcall (pyim-dcache-backend-api (if pyim-enable-shortcode
+                                                          "get-icode2word-ishortcode2word"
+                                                        "get-icode2word"))
                              (mapconcat #'identity
                                         (pyim-codes-create imobj scheme-name)
                                         "-"))))
       (setq common-words
-            (append common-words
-                    (funcall (pyim-dcache-backend-api "get-code2word-shortcode2word")
-                     (mapconcat #'identity
-                                (pyim-codes-create imobj scheme-name)
-                                "-"))))
+            (pyim-quanpin-add-common-words common-words imobj scheme-name))
+
       (setq pinyin-chars
             (append pinyin-chars
                     (pyim-dcache-get
@@ -2982,7 +3041,7 @@ pyim 的 translate-trigger-char 要占用一个键位，为了防止用户
          (prefer-trigger-chars (pyim-scheme-get-option
                                 (pyim-scheme-name)
                                 :prefer-trigger-chars)))
-    (if (pyim-string-match-p user-trigger-char first-char)
+    (if (pyim-string-match-p (regexp-quote user-trigger-char) first-char)
         (progn
           ;; (message "注意：pyim-translate-trigger-char 设置和当前输入法冲突，使用推荐设置：\"%s\""
           ;;          prefer-trigger-chars)
