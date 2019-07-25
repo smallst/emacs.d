@@ -7,14 +7,13 @@
   "
 ^Misc^                    ^Audio^               ^Move^                          ^Pomodoro^
 ----------------------------------------------------------------------------------------------
-[_u_] CompanyIspell       [_R_] Emms Random     [_sa_] Backward Sentence (M-a)  [_ss_] Start
-[_ss_] Save workgroup     [_n_] Emms Next       [_se_] Forward Sentence (M-e)   [_st_] Stop
-[_ll_] Load workgroup     [_p_] Emms Previous   [_la_] Backward Up List         [_sr_] Resume
-[_B_] New bookmark        [_P_] Emms Pause      [_le_] Forward List             [_sp_] Pause
-[_m_] Goto bookmark       [_O_] Emms Open       [_pa_] Backward Paragraph (M-{)
-[_v_] Show/Hide undo      [_L_] Emms Playlist   [_pe_] Forward Paragraph (M-})
-[_b_] Switch Gnus buffer  [_w_] Pronounce word
-[_f_] Recent file
+[_ss_] Save workgroup     [_R_] Emms Random     [_sa_] Backward Sentence (M-a)  [_ss_] Start
+[_ll_] Load workgroup     [_n_] Emms Next       [_se_] Forward Sentence (M-e)   [_st_] Stop
+[_B_] New bookmark        [_p_] Emms Previous   [_la_] Backward Up List         [_sr_] Resume
+[_m_] Goto bookmark       [_P_] Emms Pause      [_le_] Forward List             [_sp_] Pause
+[_v_] Show/Hide undo      [_O_] Emms Open       [_pa_] Backward Paragraph (M-{)
+[_b_] Switch Gnus buffer  [_L_] Emms Playlist   [_pe_] Forward Paragraph (M-})
+[_f_] Recent file         [_w_] Pronounce word
 [_d_] Recent directory
 [_h_] Dired CMD history
 [_E_] Enable typewriter
@@ -28,7 +27,6 @@
   ("d" counsel-recent-directory)
   ("ss" wg-create-workgroup)
   ("ll" my-wg-switch-workgroup)
-  ("u" toggle-company-ispell)
   ("E" toggle-typewriter)
   ("V" twm/toggle-sound-style)
   ("v" undo-tree-visualize)
@@ -58,32 +56,23 @@
   (local-set-key (kbd "C-c C-y") 'hydra-launcher/body))
 (add-hook 'org-mode-hook 'org-mode-hook-hydra-setup)
 
-;; {{ mail
-;; @see https://github.com/redguardtoo/mastering-emacs-in-one-year-guide/blob/master/gnus-guide-en.org
-;; gnus-group-mode
-(eval-after-load 'gnus-group
+(eval-after-load 'find-file-in-project
   '(progn
-     (defhydra hydra-gnus-group (:color blue)
+     (defhydra hydra-ffip-diff-group (:color blue)
        "
-[_A_] Remote groups (A A) [_g_] Refresh
-[_L_] Local groups        [_\\^_] List servers
-[_c_] Mark all read       [_m_] Compose new mail
-[_G_] Search mails (G G)  [_#_] Mark mail
-[_b_] Switch Gnus buffer  [_E_] Extract email address
+[_k_] Previous hunk
+[_j_] Next hunk
+[_p_] Previous file
+[_n_] Next file
 "
-       ("A" gnus-group-list-active)
-       ("L" gnus-group-list-all-groups)
-       ("c" gnus-topic-catchup-articles)
-       ("G" dianyou-group-make-nnir-group)
-       ("b" dianyou-switch-gnus-buffer)
-       ("g" gnus-group-get-new-news)
-       ("^" gnus-group-enter-server-mode)
-       ("m" gnus-group-new-mail)
-       ("#" gnus-topic-mark-topic)
-       ("E" dianyou-summary-extract-email-address)
-       ("q" nil))
-     ;; y is not used by default
-     (define-key gnus-group-mode-map "y" 'hydra-gnus-group/body)))
+       ("k" diff-hunk-prev)
+       ("j" diff-hunk-next)
+       ("p" diff-file-prev)
+       ("n" diff-file-next)
+       ("q" nil))))
+(defun ffip-diff-mode-hook-hydra-setup ()
+  (local-set-key (kbd "C-c C-y") 'hydra-ffip-diff-group/body))
+(add-hook 'ffip-diff-mode-hook 'ffip-diff-mode-hook-hydra-setup)
 
 ;; gnus-summary-mode
 (eval-after-load 'gnus-sum
@@ -285,6 +274,7 @@
 ;; {{ @see https://github.com/abo-abo/hydra/blob/master/hydra-examples.el
 (defhydra hydra-toggle (:color pink)
   "
+_u_ company-ispell     %(if (memq 'company-ispell company-backends) t)
 _a_ abbrev-mode:       %`abbrev-mode
 _d_ debug-on-error:    %`debug-on-error
 _f_ auto-fill-mode:    %`auto-fill-function
@@ -292,6 +282,7 @@ _t_ truncate-lines:    %`truncate-lines
 _w_ whitespace-mode:   %`whitespace-mode
 _i_ indent-tabs-mode:   %`indent-tabs-mode
 "
+  ("u" toggle-company-ispell nil)
   ("a" abbrev-mode nil)
   ("d" toggle-debug-on-error nil)
   ("f" auto-fill-mode nil)
@@ -430,41 +421,24 @@ Git gutter:
 
 (defhydra hydra-search ()
   "
-Dictionary^^         ^Search text^
----------------------------------
-_b_ sdcv at point    _;_ 2 chars
-_t_ sdcv input       _w_ (sub)word
-_d_ dict.org         _a_ any chars
-_g_ Google
-_c_ current file ext
-_f_ Finance
-_q_ StackOverflow
-_j_ Javascript API
-_a_ Java
+ ^Search^         ^Dictionary^
+-----------------------------------------
+_g_ Google        _b_ English => English
+_f_ Finance       _t_ English => Chinese
+_s_ StackOverflow _d_ dict.org
 _h_ Code
 _m_ Man
-_q_ cancel
 "
-  ("b" sdcv-search-pointer)
+  ("b" sdcv-search-input)
   ("t" sdcv-search-input+)
   ("d" my-lookup-dict-org)
   ("g" w3m-google-search)
-  ("c" w3m-google-by-filetype)
   ("f" w3m-search-financial-dictionary)
-  ("q" w3m-stackoverflow-search)
-  ("j" w3m-search-js-api-mdn)
-  ("a" w3m-java-search)
+  ("s" w3m-stackoverflow-search)
   ("h" w3mext-hacker-search)
   ("m" lookup-doc-in-man)
-
-  (";" ace-pinyin-jump-char-2)
-  ("w" avy-goto-word-or-subword-1 )
-  ("a" avy-goto-char-timer )
-
   ("q" nil))
 (global-set-key (kbd "C-c C-s") 'hydra-search/body)
-;; (global-set-key (kbd "C-c ; b") 'sdcv-search-pointer)
-;; (global-set-key (kbd "C-c ; t") 'sdcv-search-input+)
 
 (defhydra hydra-describe (:color blue :hint nil)
   "

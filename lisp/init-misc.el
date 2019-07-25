@@ -162,7 +162,7 @@
 
 (defun lookup-doc-in-man ()
   (interactive)
-  (man (concat "-k " (my-use-selected-string-or-ask ""))))
+  (man (concat "-k " (my-use-selected-string-or-ask))))
 
 ;; @see http://blog.binchen.org/posts/effective-code-navigation-for-web-development.html
 ;; don't let the cursor go into minibuffer prompt
@@ -1399,4 +1399,7 @@ If use-indirect-buffer is not nil, use `indirect-buffer' to hold the widen conte
         (t (error "Please select a region to narrow to"))))
 ;; }}
 
+;; {{ octave
+(add-auto-mode 'octave-mode "\\.m$")
+;; }}
 (provide 'init-misc)
