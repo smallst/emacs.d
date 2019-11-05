@@ -137,6 +137,7 @@
 
   (require-init 'init-dying-mode)
   (require-init 'init-php-mode)
+  (require-init 'init-coffee-mode)
   (require-init 'init-dot-mode)
   (require-init 'init-auctex)
   ;(require 'ox-bibtex)
