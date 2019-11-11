@@ -247,7 +247,8 @@ If N is not nil, only list directories in current project."
   (interactive)
   (cond
    ((region-active-p)
-    (counsel-git-grep counsel-git-grep-cmd-default (my-selected-str)))
+    ;; since 0.12.0, counsel change the api
+    (counsel-git-grep (my-selected-str) default-directory counsel-git-grep-cmd-default ))
    (t
     (counsel-git-grep))))
 
@@ -343,7 +344,6 @@ If N is nil, use `ivy-mode' to browse `kill-ring'."
                                  emacs-lisp-mode
                                  diff-mode))))
     (let* ((imenu-create-index-function 'counsel-etags-imenu-default-create-index-function))
-      (message "====3")
       (counsel-imenu)))
    (t
     (counsel-imenu))))
