@@ -31,58 +31,126 @@
   :type 'string
   :group 'vc-msg)
 
-(defun vc-msg-git-blame-output (cmd)
-  "Generate blame output by running CMD in shell."
-  (shell-command-to-string cmd))
+(defun vc-msg-git-shell-output (cmd)
+  "Generate clean output by running CMD in shell."
+  (let* ((default-directory (vc-msg-sdk-git-rootdir)))
+    (string-trim (shell-command-to-string cmd))))
 
 (defun vc-msg-git-generate-cmd (opts)
   "Generate Git command from OPTS."
   (format "%s --no-pager %s" vc-msg-git-program opts))
 
+(defun vc-msg-git-parse-blame-output (output)
+  "Parse git blame OUTPUT."
+  (let* (id
+         author
+         author-time
+         author-tz
+         filename
+         summary
+         (lines (split-string output "[\n\r]+"))
+         (first-line (nth 0 lines))
+         (prev-commit-line-num (nth 1 (split-string first-line " ")))
+         (code (string-trim (nth (1- (length lines)) lines))))
+    (if (string-match "^\\([a-z0-9A-Z]+\\) " output)
+        (setq id (match-string 1 output)))
+    (if (string-match "^author +\\([^ ].*\\)" output)
+        (setq author (match-string 1 output)))
+    (if (string-match "^author-time +\\([^ ].*\\)" output)
+        (setq author-time (match-string 1 output)))
+    (if (string-match "^author-time +\\([^ ].*\\)" output)
+        (setq author-time (match-string 1 output)))
+    (if (string-match "^author-tz +\\([^ ].*\\)" output)
+        (setq author-tz (match-string 1 output)))
+    (if (string-match "^summary +\\([^ ].*\\)" output)
+        (setq summary (match-string 1 output)))
+    (if (string-match "^filename +\\([^ ].*\\)" output)
+        (setq filename (match-string 1 output)))
+    (list :id id
+          :author author
+          :author-time author-time
+          :author-tz author-tz
+          :line_num prev-commit-line-num
+          :code code
+          :filename filename
+          :summary summary)))
+
 ;;;###autoload
-(defun vc-msg-git-blame-arguments (file line-num)
-  "Git blame FILE at LINE-NUM.
+(defun vc-msg-git-blame-arguments (line-num)
+  "Git blame at LINE-NUM.
 Note git option `-C' track text copied elsewhere,
 `-M' tracked moved content inside file.
 See https://www.kernel.org/pub/software/scm/git/docs/git-blame.html"
   ;; @see https://stackoverflow.com/questions/15769298/git-blame-correct-author-after-merge
-  (format "blame -C -M -w -L %d,+1 --porcelain %s --no-merges" line-num file))
+  (format "blame -C -M -w -L %s,+1 --no-merges --porcelain" line-num))
+
+(defmacro vc-msg-git-valid-p (output)
+  "OUTPUT is valid."
+  `(string-match-p "^author " ,output))
+
+(defun vc-msg-git-find-blame-cmd-recursively (command info str common-opts)
+  "Git blame COMMAND is executed and output is extracted into INFO.
+Find commit id from the blame, blame again with the parent commit id.
+If the new blame output does not contain STR, return the original command.
+COMMON-OPTS is used to build new blame command."
+  (let* ((id (plist-get info :id))
+         ;; file is a relative path to git root
+         (file (plist-get info :filename))
+         (line-num (plist-get info :line-num))
+         (next-cmd (vc-msg-git-generate-cmd (format "%s %s^ -- %s"
+                                                    common-opts
+                                                    id
+                                                    file)))
+
+         (next-output (vc-msg-git-shell-output next-cmd))
+         next-info)
+    (cond
+     ((not (and (vc-msg-git-valid-p next-output)
+                (setq next-info (vc-msg-git-parse-blame-output next-output))
+                (string-match-p (regexp-quote str)
+                                (plist-get next-info :code))))
+      command)
+     (t
+      (vc-msg-git-find-blame-cmd-recursively next-cmd
+                                             next-info
+                                             str
+                                             common-opts)))))
+
+(defun vc-msg-git-generate-blame-cmd (file line-num)
+  "Generate git blame command from FILE and LINE-NUM."
+  (let* ((str (vc-msg-sdk-selected-string))
+         output
+         info
+         (common-opts (vc-msg-git-blame-arguments line-num))
+         (cmd (vc-msg-git-generate-cmd (format "%s -- %s"
+                                               common-opts
+                                               file))))
+    (cond
+     ((not str)
+      cmd)
+     ((vc-msg-git-valid-p (setq output (vc-msg-git-shell-output cmd)))
+      (setq info (vc-msg-git-parse-blame-output output))
+      (vc-msg-git-find-blame-cmd-recursively cmd
+                                             info
+                                             (string-trim str)
+                                             common-opts)))))
 
 ;;;###autoload
 (defun vc-msg-git-execute (file line-num)
   "Use FILE and LINE-NUM to produce git command.
 Parse the command execution output and return a plist:
 '(:id str :author str :author-time str :summary str)."
-  (let* ((cmd (vc-msg-git-generate-cmd (vc-msg-git-blame-arguments file line-num)))
-         (output (vc-msg-git-blame-output cmd)))
+  ;; convert full file path to path relative to git directory
+  ;; because the command should always be executed in git root.
+  (setq file (file-relative-name file (vc-msg-sdk-git-rootdir)))
+  (let* ((cmd (vc-msg-git-generate-blame-cmd file line-num))
+         (output (vc-msg-git-shell-output cmd)))
+
     ;; I prefer simpler code:
-    ;; if output doesn't match certain text pattern
-    ;; we assum the command fail
+    ;; if output doesn't match certain text pattern, the command fails
     (cond
-     ((string-match-p "^author " output)
-      (let* (id
-             author
-             author-time
-             author-tz
-             summary
-             (first-line (nth 0 (split-string output "[\n\r]+"))))
-        (if (string-match "^\\([a-z0-9A-Z]+\\) " output)
-            (setq id (match-string 1 output)))
-        (if (string-match "^author +\\([^ ].*\\)" output)
-            (setq author (match-string 1 output)))
-        (if (string-match "^author-time +\\([^ ].*\\)" output)
-            (setq author-time (match-string 1 output)))
-        (if (string-match "^author-time +\\([^ ].*\\)" output)
-            (setq author-time (match-string 1 output)))
-        (if (string-match "^author-tz +\\([^ ].*\\)" output)
-            (setq author-tz (match-string 1 output)))
-        (if (string-match "^summary +\\([^ ].*\\)" output)
-            (setq summary (match-string 1 output)))
-        (list :id id
-              :author author
-              :author-time author-time
-              :author-tz author-tz
-              :summary summary)))
+     ((vc-msg-git-valid-p output)
+      (vc-msg-git-parse-blame-output output))
      (t
       (format "`%s` failed." cmd)))))
 
@@ -92,7 +160,7 @@ Parse the command execution output and return a plist:
   (let* ((author (plist-get info :author)))
     (cond
      ((string-match-p "Not Committed Yet" author)
-      "* Not Commited Yet*")
+      "* Not Committed Yet*")
      (t
       (format "Commit: %s\nAuthor: %s\nDate: %s\nTimezone: %s\n\n%s"
               (vc-msg-sdk-short-id (plist-get info :id))
@@ -105,9 +173,10 @@ Parse the command execution output and return a plist:
   "Show code."
   (let* ((info vc-msg-previous-commit-info)
          (cmd (vc-msg-git-generate-cmd (format "show %s" (plist-get info :id)))))
+    ;; show one commit information
     (vc-msg-sdk-get-or-create-buffer
      "vs-msg"
-     (shell-command-to-string cmd))))
+     (vc-msg-git-shell-output cmd))))
 
 (defcustom vc-msg-git-extra
   '(("c" "[c]ode" vc-msg-git-show-code))

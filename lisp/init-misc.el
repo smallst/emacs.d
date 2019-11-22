@@ -164,13 +164,6 @@
 (setq comint-password-prompt-regexp (format "%s\\|^ *Password for .*: *$" comint-password-prompt-regexp))
 (add-hook 'comint-output-filter-functions 'comint-watch-for-password-prompt)
 
-;; {{ which-key-mode
-(local-require 'which-key)
-(setq which-key-allow-imprecise-window-fit t) ; performance
-(setq which-key-separator ":")
-(which-key-mode 1)
-;; }}
-
 (global-set-key (kbd "M-x") 'counsel-M-x)
 (global-set-key (kbd "C-x C-m") 'counsel-M-x)
 
@@ -244,13 +237,12 @@
 ;; (add-hook 'org-mode-hook 'truncate-lines-setup)
 ;; }}
 
-;; turns on auto-fill-mode, don't use text-mode-hook because for some
+;; turn on auto-fill-mode, don't use `text-mode-hook' because for some
 ;; mode (org-mode for example), this will make the exported document
 ;; ugly!
 ;; (add-hook 'markdown-mode-hook 'turn-on-auto-fill)
 (add-hook 'change-log-mode-hook 'turn-on-auto-fill)
 (add-hook 'cc-mode-hook 'turn-on-auto-fill)
-(global-set-key (kbd "C-c q") 'auto-fill-mode)
 
 ;; some project prefer tab, so be it
 ;; @see http://stackoverflow.com/questions/69934/set-4-space-indent-in-emacs-in-text-mode
@@ -288,43 +280,6 @@
   (interactive)
   (shell-command "periscope.py -l en *.mkv *.mp4 *.avi &"))
 
-(defun erase-specific-buffer (num buf-name)
-  (let* ((message-buffer (get-buffer buf-name))
-         (old-buffer (current-buffer)))
-    (save-excursion
-      (if (buffer-live-p message-buffer)
-          (progn
-            (switch-to-buffer message-buffer)
-            (if (not (null num))
-                (progn
-                  (end-of-buffer)
-                  (dotimes (i num)
-                    (previous-line))
-                  (set-register t (buffer-substring (point) (point-max)))
-                  (erase-buffer)
-                  (insert (get-register t))
-                  (switch-to-buffer old-buffer))
-              (progn
-                (erase-buffer)
-                (switch-to-buffer old-buffer))))
-        (error "Message buffer doesn't exists!")
-        ))))
-
-;; {{ message buffer things
-(defun erase-message-buffer (&optional num)
-  "Erase the content of the *Messages* buffer in emacs.
-Keep the last num lines if argument num if given."
-  (interactive "p")
-  (erase-specific-buffer num "*Messages*"))
-
-;; turn off read-only-mode in *Message* buffer, a "feature" in v24.4
-(when (fboundp 'messages-buffer-mode)
-  (defun messages-buffer-mode-hook-setup ()
-    (message "messages-buffer-mode-hook-setup called")
-    (read-only-mode -1))
-  (add-hook 'messages-buffer-mode-hook 'messages-buffer-mode-hook-setup))
-;; }}
-
 ;; vimrc
 (add-auto-mode 'vimrc-mode "\\.?vim\\(rc\\)?$")
 
@@ -336,41 +291,6 @@ Keep the last num lines if argument num if given."
            '( "^@@ -[0-9]+,[0-9]+ \\+[0-9]+,[0-9]+ @@" ))
      ))
 ;; }}
-
-(defun my-multi-purpose-grep (n)
-  "Run different grep from N."
-  (interactive "P")
-  (cond
-   ((not n)
-    (counsel-etags-grep))
-   ((= n 1)
-    ;; grep references of current web component
-    ;; component could be inside styled-component like `const c = styled(Comp1)`
-    (let* ((fb (file-name-base buffer-file-name)))
-      (when (string= "index" fb)
-        (setq fb (file-name-base (directory-file-name (file-name-directory (directory-file-name buffer-file-name))))))
-        (counsel-etags-grep (format "(<%s( *$| [^ ])|styled\\\(%s\\))" fb fb))))
-   ((= n 2)
-    ;; grep web component attribute name
-    (counsel-etags-grep (format "^ *%s[=:]" (or (thing-at-point 'symbol)
-                                                (read-string "Component attribute name?")))))
-   ((= n 3)
-    ;; grep current file name
-    (counsel-etags-grep (format ".*%s" (file-name-nondirectory buffer-file-name))))
-   ((= n 4)
-    ;; grep js files which is imported
-    (counsel-etags-grep (format "from .*%s('|\\\.js');?"
-                                (file-name-base (file-name-nondirectory buffer-file-name)))))
-   ((= n 5)
-    ;; grep Chinese using pinyinlib.
-    ;; In ivy filter, trigger key must be pressed before filter chinese
-    (unless (featurep 'pinyinlib) (require 'pinyinlib))
-    (let* ((counsel-etags-convert-grep-keyword
-            (lambda (keyword)
-              (if (and keyword (> (length keyword) 0))
-                  (pinyinlib-build-regexp-string keyword t)
-                keyword))))
-      (counsel-etags-grep)))))
 
 (defun add-pwd-into-load-path ()
   "add current directory into load-path, useful for elisp developers"
@@ -1377,4 +1297,17 @@ Including indent-buffer, which should not be called automatically on save."
   (setq edit-server-new-frame nil)
   (edit-server-start))
 ;; }}
+
+(defun browse-current-file ()
+  "Open the current file as a URL using `browse-url'."
+  (interactive)
+  (browse-url-generic (concat "file://" (buffer-file-name))))
+
+;; {{ which-key-mode
+(local-require 'which-key)
+(setq which-key-allow-imprecise-window-fit t) ; performance
+(setq which-key-separator ":")
+(which-key-mode 1)
+;; }}
+
 (provide 'init-misc)
