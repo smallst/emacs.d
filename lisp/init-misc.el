@@ -350,21 +350,24 @@ This function can be re-used by other major modes after compilation."
 
 (defun my-which-function ()
   "Return current function name."
-  ;; clean the imenu cache
-  (which-function)
+
+  (unless (featurep 'imenu) (require 'imenu))
   ;; @see http://stackoverflow.com/questions/13426564/how-to-force-a-rescan-in-imenu-by-a-function
-  ;; (let* ((imenu-create-index-function (if (my-use-tags-as-imenu-function-p)
-  ;;                                         'counsel-etags-imenu-default-create-index-function
-  ;;                                       imenu-create-index-function)))
-  ;;   (setq imenu--index-alist nil)
-  ;;   (which-function))
-  )
+  (let* ((imenu-create-index-function (if (my-use-tags-as-imenu-function-p)
+                                          'counsel-etags-imenu-default-create-index-function
+                                        imenu-create-index-function)))
+    ;; clean the imenu cache
+    (setq imenu--index-alist nil)
+    (imenu--make-index-alist t)
+    (which-function)))
 
 (defun popup-which-function ()
+  "Popup which function message."
   (interactive)
   (let* ((msg (my-which-function)))
-    (popup-tip msg)
-    (copy-yank-str msg)))
+    (when msg
+      (popup-tip msg)
+      (copy-yank-str msg))))
 ;; }}
 
 ;; {{ music
@@ -869,6 +872,12 @@ If no region is selected. You will be asked to use `kill-ring' or clipboard inst
 
 (eval-after-load 'compile
   '(progn
+     (defadvice compile (around compile-hack activate)
+       (cond
+        ((member major-mode '(octave-mode))
+         (octave-send-buffer))
+        (t
+         ad-do-it)))
      (add-to-list 'compilation-error-regexp-alist-alist
                   (list 'mocha "at [^()]+ (\\([^:]+\\):\\([^:]+\\):\\([^:]+\\))" 1 2 3))
      (add-to-list 'compilation-error-regexp-alist 'mocha)))
@@ -907,7 +916,7 @@ When join-dark-side is t, pick up dark theme only."
          (hour (string-to-number (format-time-string "%H" (current-time))))
          (prefer-light-p (and (not join-dark-side) (>= hour 9) (<= hour 19)) ))
     (dolist (theme (custom-available-themes))
-      (let* ((light-theme-p (string-match-p "light" (symbol-name theme))))
+      (let* ((light-theme-p (string-match-p "-light" (symbol-name theme))))
         (when (if prefer-light-p light-theme-p (not light-theme-p))
           (push theme themes))))
   (pickup-random-color-theme themes)))
@@ -946,7 +955,7 @@ When join-dark-side is t, pick up dark theme only."
                               emms-player-mplayer
                               emms-player-mpg321
                               emms-player-ogg123
-                              lemms-player-vlc
+                              emms-player-vlc
                               emms-player-vlc-playlist))))
 ;; }}
 

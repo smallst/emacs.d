@@ -133,7 +133,7 @@
                (format "%s -o %s %s %s"
                        (or (getenv "CC") "g++")
                        (file-name-sans-extension myfile)
-                       (or (getenv "CFLAGS") "-Wall -g -std=c++11")
+                       (or (getenv "CFLAGS") "-Wall -g -std=c++14")
                        myfile))) )
       
       ;; (set (make-local-variable 'my-exec-command)
