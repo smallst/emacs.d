@@ -35,7 +35,6 @@
     loc-changes
     test-simple
     ;; }}
-    counsel-css
     iedit
     undo-tree
     js-doc
@@ -84,7 +83,6 @@
     dsvn
     findr
     mwe-log-commands
-    counsel-gtags ; the stable version is never released
     noflet
     db
     package-lint
@@ -197,8 +195,7 @@ PACKAGE is a symbol, VERSION is a vector as produced by `version-to-list', and
 
       ;; We still need use some unstable packages
       ((string= archive "melpa")
-       (or (string-match-p (format "%s" package)
-                           (mapconcat (lambda (s) (format "%s" s)) melpa-include-packages " "))
+       (or (member package melpa-include-packages)
            ;; color themes are welcomed
            (string-match-p "-theme" (format "%s" package))))
 
@@ -250,7 +247,9 @@ PACKAGE is a symbol, VERSION is a vector as produced by `version-to-list', and
 (require-package 'workgroups2)
 (require-package 'yaml-mode)
 (require-package 'paredit)
+(require-package 'xr) ; required by pyim
 (require-package 'findr)
+(require-package 'diredfl) ; font lock for `dired-mode'
 (require-package 'pinyinlib)
 (require-package 'find-by-pinyin-dired)
 (require-package 'jump)
@@ -274,7 +273,7 @@ PACKAGE is a symbol, VERSION is a vector as produced by `version-to-list', and
 (require-package 'flymake-jslint)
 (require-package 'ivy)
 (require-package 'swiper)
-(require-package 'counsel '(0 13 0)) ; counsel => swiper => ivy
+(require-package 'counsel) ; counsel => swiper => ivy
 (require-package 'find-file-in-project)
 (require-package 'counsel-bbdb)
 (require-package 'ibuffer-vc)
