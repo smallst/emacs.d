@@ -4752,7 +4752,7 @@ no validation needed here. State machine has done that"
 
 ;;}}}
 
-(provide 'unicad)
+(provide 'init-unicad)
 
 ;;; unicad.el ends here
 ;;; Local Variables:

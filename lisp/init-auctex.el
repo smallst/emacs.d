@@ -11,10 +11,10 @@
        TeX-source-correlate-start-server t
        TeX-source-correlate-mode 1)
        
-;(add-hook 'LaTeX-mode-hook (lambda()
-;                             (add-to-list 'TeX-command-list '("XeLaTeX" "%`xelatex%(mode)%' %t" TeX-run-TeX nil t))
-;                             (setq TeX-command-default "XeLaTeX")
-;))
+;; (add-hook 'LaTeX-mode-hook (lambda()
+;;                             (add-to-list 'TeX-command-list '("XeLaTeX" "%`xelatex%(mode)%' %t" TeX-run-TeX nil t))
+;;                             (setq TeX-command-default "XeLaTeX")
+;; ))
 (setq-default TeX-engine 'xetex)
 (setq reftex-plug-into-AUCTeX t)
 (setq TeX-parse-self t) ; Enable parse on load.

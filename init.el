@@ -145,6 +145,7 @@
   (require-init 'init-coffee-mode)
   (require-init 'init-dot-mode)
   (require-init 'init-auctex)
+  (require-init 'init-unicad)
   ;(require 'ox-bibtex)
   (require-init 'init-pdf)
 

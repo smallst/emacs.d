@@ -113,6 +113,7 @@
     graphviz-dot-mode
     zoutline
     pdf-tools
+    unicad
     company-c-headers
     company-statistics)
   "Packages to install from melpa-unstable.")
