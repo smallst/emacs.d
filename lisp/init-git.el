@@ -5,7 +5,6 @@
 ;; (setq vc-handled-backends ())
 ;; }}
 
-
 ;; {{ Solution 2: if NO network mounted drive involved
 (setq vc-handled-backends '(Git SVN Hg))
 ;; @see https://www.reddit.com/r/emacs/comments/4c0mi3/the_biggest_performance_improvement_to_emacs_ive/
@@ -19,7 +18,7 @@
 ;; (defun my-setup-develop-environment ()
 ;;   (interactive)
 ;;   (cond
-;;    ((string-match-p (file-truename "~/.emacs.d") (file-name-directory (buffer-file-name))
+;;    ((string-match-p (file-truename my-emacs-d) (file-name-directory (buffer-file-name))
 ;;     (setq vc-handled-backends '(Git)))
 ;;    (t (setq vc-handled-backends nil)))))
 ;; (add-hook 'java-mode-hook 'my-setup-develop-environment)
@@ -35,6 +34,8 @@
 
 ;; {{ git-gutter
 (local-require 'git-gutter)
+(setq git-gutter:disabled-modes
+      '(dired-mode))
 
 (defun git-gutter-reset-to-head-parent()
   "Reset  gutter to HEAD^.  Support Subversion and Git."
@@ -56,7 +57,7 @@
       (car (split-string item "|" t)))))
 
 (defun my-git-show-commit-internal ()
-  "Show git commit"
+  "Show git commit."
   (let* ((id (my-git-commit-id)))
     (when id
       (shell-command-to-string (format "git show %s" id)))))
@@ -77,6 +78,8 @@
   (git-gutter:clear))
 
 (defun git-gutter-reset-to-default ()
+  "Restore git gutter to its original status.
+Show the diff between current working code and git head."
   (interactive)
   (git-gutter:set-start-revision nil)
   (message "git-gutter reset"))
@@ -85,6 +88,7 @@
 
 ;; nobody use bzr
 ;; I could be forced to use subversion or hg which has higher priority
+;; Please note my $HOME directory is under git control
 (custom-set-variables '(git-gutter:handled-backends '(svn hg git)))
 
 (unless (fboundp 'global-display-line-numbers-mode)
@@ -153,7 +157,7 @@
      ((and msg (> (length msg) 3))
       (shell-command "git add -u")
       (shell-command (format "git commit -m \"%s\"" msg))
-      (message "Tracked files is commited."))
+      (message "Tracked files is committed."))
      (t
       (message "Do nothing!")))))
 
@@ -167,6 +171,7 @@
 
 ;; {{ goto next/previous hunk
 (defun my-goto-next-hunk (arg)
+  "Goto next hunk."
   (interactive "p")
   (if (memq major-mode '(diff-mode))
       (diff-hunk-next)
@@ -177,6 +182,7 @@
       (git-gutter:next-hunk arg))))
 
 (defun my-goto-previous-hunk (arg)
+  "Goto previous hunk."
   (interactive "p")
   (if (memq major-mode '(diff-mode))
       (diff-hunk-prev)
@@ -185,6 +191,54 @@
         (goto-char (line-beginning-position))
       (forward-line -1)
       (git-gutter:previous-hunk arg))))
+;; }}
+
+;; {{
+(defun my-git-extract-based (target lines)
+  "Extract based version from TARGET."
+  (let* (based (i 0) break)
+    (while (and (not break) (< i (length lines)))
+      (cond
+       ((string-match (regexp-quote target) (nth i lines))
+        (setq break t))
+       (t
+        (setq i (1+ i)))))
+    ;; find child of target commit
+    (when (and (< 0 i)
+               (< i (length lines)))
+      (setq based
+            (replace-regexp-in-string "^tag: +"
+                                      ""
+                                      (car (split-string (nth (1- i) lines)
+                                                         " +")))))
+    based))
+
+(defun my-git-rebase-interactive (&optional user-select-branch)
+  "Rebase interactively on the closest branch or tag in git log output.
+If USER-SELECT-BRANCH is not nil, rebase on the tag or branch selected by user."
+  (interactive "P")
+  (let* ((log-output (shell-command-to-string "git --no-pager log --decorate --oneline -n 1024"))
+         (lines (split-string log-output "\n"))
+         (targets (delq nil
+                        (mapcar (lambda (e)
+                                  (when (and (string-match "^[a-z0-9]+ (\\([^()]+\\)) " e)
+                                             (not (string-match "^[a-z0-9]+ (HEAD " e)))
+                                    (match-string 1 e))) lines)))
+         based)
+    (cond
+     ((or (not targets) (eq (length targets) 0))
+      (message "No tag or branch is found to base on."))
+     ((or (not user-select-branch)) (eq (length targets) 1)
+      ;; select the closest/only tag or branch
+      (setq based (my-git-extract-based (nth 0 targets) lines)))
+     (t
+      ;; select the one tag or branch
+      (setq based (my-git-extract-based (completing-read "Select based: " targets)
+                                        lines))))
+
+    ;; start git rebase
+    (when based
+      (magit-rebase-interactive based nil))))
 ;; }}
 
 ;; {{ git-gutter use ivy
@@ -257,37 +311,32 @@ If nothing is selected, use the word under cursor as function name to look up."
       (my-ensure 'find-file-in-project)
       (ffip-show-content-in-diff-mode (shell-command-to-string cmd)))))
 
-(eval-after-load 'magit
-  '(progn
-    (ivy-mode 1)))
+(with-eval-after-load 'vc-msg-git
+  ;; open file of certain revision
+  (push '("m" "[m]agit-find-file"
+          (lambda ()
+            (let* ((info vc-msg-previous-commit-info))
+              (magit-find-file (plist-get info :id )
+                               (concat (vc-msg-sdk-git-rootdir)
+                                       (plist-get info :filename))))))
+        vc-msg-git-extra)
 
-(eval-after-load 'vc-msg-git
-  '(progn
-     ;; open file of certain revision
-     (push '("m" "[m]agit-find-file"
-             (lambda ()
-               (let* ((info vc-msg-previous-commit-info))
-                 (magit-find-file (plist-get info :id )
-                                  (concat (vc-msg-sdk-git-rootdir)
-                                          (plist-get info :filename))))))
-           vc-msg-git-extra)
+  ;; copy commit hash
+  (push '("h" "[h]ash"
+          (lambda ()
+            (let* ((info vc-msg-previous-commit-info)
+                   (id (plist-get info :id)))
+              (kill-new id)
+              (message "%s => kill-ring" id))))
+        vc-msg-git-extra)
 
-     ;; copy commit hash
-     (push '("h" "[h]ash"
-             (lambda ()
-               (let* ((info vc-msg-previous-commit-info)
-                      (id (plist-get info :id)))
-                 (kill-new id)
-                 (message "%s => kill-ring" id))))
-           vc-msg-git-extra)
-
-     ;; copy commit hash
-     (push '("a" "[a]uthor"
-             (lambda ()
-               (let* ((info vc-msg-previous-commit-info)
-                      (author (plist-get info :author)))
-                 (kill-new author)
-                 (message "%s => kill-ring" author))))
-           vc-msg-git-extra)))
+  ;; copy author
+  (push '("a" "[a]uthor"
+          (lambda ()
+            (let* ((info vc-msg-previous-commit-info)
+                   (author (plist-get info :author)))
+              (kill-new author)
+              (message "%s => kill-ring" author))))
+        vc-msg-git-extra))
 
 (provide 'init-git)

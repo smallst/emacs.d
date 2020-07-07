@@ -41,7 +41,7 @@ TAGS
 GTAGS
 GPATH
 GRTAGS
-.emacs.d/emms/
+emms/
 tutorial/
 /var
 /transient
@@ -67,3 +67,4 @@ network-security.data
 *.ogg
 nov-places
 transient/
+elpy/
