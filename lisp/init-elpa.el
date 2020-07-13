@@ -15,6 +15,7 @@
   '(ace-window ; lastest stable is released on year 2014
     auto-package-update
     nov
+    cnfont
     bbdb
     native-complete
     company-native-complete
@@ -43,9 +44,9 @@
     js-doc
     jss ; remote debugger of browser
     ;; {{ since stable v0.13.0 released, we go back to stable version
-    ;; ivy
-    ;; counsel
-    ;; swiper
+    ivy
+    counsel
+    swiper
     ;; }}
     wgrep
     ;; {{ themes in melpa unstable
@@ -329,6 +330,7 @@ You still need modify `package-archives' in \"init-elpa.el\" to PERMANENTLY use 
 (require-package 'evil-args)
 (require-package 'evil-textobj-syntax)
 (require-package 'slime)
+(require-package 'pug-mode)
 (require-package 'counsel-css)
 (require-package 'auto-package-update)
 (require-package 'keyfreq)
