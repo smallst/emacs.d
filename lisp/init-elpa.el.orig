@@ -324,9 +324,12 @@ You still need modify `package-archives' in \"init-elpa.el\" to PERMANENTLY use 
 (require-package 'evil-visualstar)
 (require-package 'evil-args)
 (require-package 'evil-textobj-syntax)
+<<<<<<< HEAD
 (require-package 'slime)
 (require-package 'pug-mode)
+=======
 (require-package 'undo-fu)
+>>>>>>> redguardtoo/master
 (require-package 'counsel-css)
 (require-package 'auto-package-update)
 (require-package 'keyfreq)

@@ -4,9 +4,9 @@
 
 ;; Author: Chen Bin <chenbin dot sh AT gmail dot com>
 ;; URL: http://github.com/redguardtoo/counsel-etags
-;; Package-Requires: ((counsel "0.13.0"))
+;; Package-Requires: ((emacs "25.1") (counsel "0.13.0"))
 ;; Keywords: tools, convenience
-;; Version: 1.9.11
+;; Version: 1.9.14
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -47,6 +47,7 @@
 ;;
 ;;   `counsel-etags-scan-code' to create tags file
 ;;   `counsel-etags-grep' to grep
+;;   `counsel-etags-grep-extra-arguments' has extra arguments for grep
 ;;   `counsel-etags-grep-current-directory' to grep in current directory
 ;;   `counsel-etags-recent-tag' to open recent tag
 ;;   `counsel-etags-find-tag' to two steps tag matching use regular expression and filter
@@ -123,6 +124,10 @@
 ;;    You can customize `counsel-etags-ctags-options-base' to change the path of
 ;;    base configuration file.
 
+;;  - Grep result is sorted by string distance of current file path and candidate file path.
+;;    The sorting happens in Emacs 27+.
+;;    You can set `counsel-etags-sort-grep-result-p' to nil to disable sorting.
+
 ;; See https://github.com/redguardtoo/counsel-etags/ for more tips.
 
 ;;; Code:
@@ -132,6 +137,7 @@
 (require 'cl-lib)
 (require 'find-file)
 (require 'counsel nil t) ; counsel => swiper => ivy
+(require 'tramp nil t)
 
 (defgroup counsel-etags nil
   "Complete solution to use ctags."
@@ -180,6 +186,17 @@ A CLI to create tags file:
   :group 'counsel-etags
   :type 'boolean)
 
+(defcustom counsel-etags-use-ripgrep-force nil
+  "Force use ripgrep as grep program.
+If rg is not in $PATH, then it should be defined in `counsel-etags-grep-program'."
+  :group 'counsel-etags
+  :type 'boolean)
+
+(defcustom counsel-etags-grep-extra-arguments ""
+  "Extra arguments passed to grep program."
+  :group 'counsel-etags
+  :type 'string)
+
 (defcustom counsel-etags-convert-grep-keyword 'identity
   "Convert keyword to grep to new regex to feed into grep program.
 
@@ -196,7 +213,7 @@ Here is code to enable grepping Chinese using pinyinlib,
 
 (defcustom counsel-etags-fallback-grep-function #'counsel-etags-grep
   "The fallback grep function if tag can't be found at first.
-May Grep can find something.
+Hope grep can find something.
 
 Below parameters is passed to the function.
 The parameter \"keyword\" is the search keyword.
@@ -405,7 +422,7 @@ related functions need create and scan files in this folder."
   :type 'string)
 
 (defcustom counsel-etags-ctags-options-base "~/.ctags.exuberant"
-  "Exuberant Ctags configuration base which also used by Universal Ctags.
+  "Ctags configuration base use by all Ctags implementations.
 If Universal Ctags is used, it's converted to `counsel-etags-ctags-options-file'.
 If it's nil, nothing happens."
   :group 'counsel-etags
@@ -437,11 +454,17 @@ Run 'ctags -x some-file' to see the type in second column of output."
   :type '(repeat 'string))
 
 (defcustom counsel-etags-candidates-optimize-limit 256
-  "Re-order candidates if candidate count is less than this variable's value.
+  "Sort candidates if its size is less than this variable's value.
 Candidates whose file path has Levenshtein distance to current file/directory.
-You may set it to nil to disable re-ordering for performance reason."
+You may set it to nil to disable re-ordering for performance reason.
+If `string-distance' exists, sorting always happens and this variable is ignored."
   :group 'counsel-etags
   :type 'integer)
+
+(defcustom counsel-etags-sort-grep-result-p t
+  "Sort grep result by string distance."
+  :group 'counsel-etags
+  :type 'boolean)
 
 (defcustom counsel-etags-max-file-size 512
   "Ignore files bigger than `counsel-etags-max-file-size' kilobytes.
@@ -548,7 +571,7 @@ Return nil if it's not found."
 ;;;###autoload
 (defun counsel-etags-version ()
   "Return version."
-  (message "1.9.11"))
+  (message "1.9.14"))
 
 ;;;###autoload
 (defun counsel-etags-get-hostname ()
@@ -604,7 +627,7 @@ Return nil if it's not found."
 ;;;###autoload
 (defun counsel-etags-async-shell-command (command tags-file)
   "Execute string COMMAND and create TAGS-FILE asynchronously."
-  (let* ((proc (start-process "Shell" nil shell-file-name shell-command-switch command)))
+  (let* ((proc (start-file-process "Shell" nil shell-file-name shell-command-switch command)))
     (set-process-sentinel
      proc
      `(lambda (process signal)
@@ -614,6 +637,11 @@ Return nil if it's not found."
              ((string= (substring signal 0 -1) "finished")
               (let* ((cmd (car (cdr (cdr (process-command process))))))
                 (if counsel-etags-debug (message "`%s` executed." cmd))
+                ;; If tramp exists and file is remote, clear file cache
+                (when (and (fboundp 'tramp-cleanup-this-connection)
+                           ,tags-file
+                           (file-remote-p ,tags-file))
+                  (tramp-cleanup-this-connection))
                 ;; reload tags-file
                 (when (and ,tags-file (file-exists-p ,tags-file))
                   (run-hook-with-args 'counsel-etags-after-update-tags-hook ,tags-file)
@@ -683,7 +711,6 @@ If it's Emacs etags return nil."
 (defun counsel-etags-ctags-options-file-cli (program)
   "Use PROGRAM to create cli for `counsel-etags-ctags-options-file'."
   (let* (str
-         langs
          (exuberant-ctags-p (counsel-etags-is-exuberant-ctags program)))
     (cond
      ;; Don't use any configuration file at all
@@ -724,7 +751,7 @@ If it's Emacs etags return nil."
   (let* (rlt configs filename)
     (dolist (f counsel-etags-ignore-config-files)
       (when (file-exists-p (setq filename (file-truename f)))
-        (push filename configs)))
+        (push (file-local-name filename) configs)))
     (setq rlt (mapconcat (lambda (c) (format "--exclude=\"@%s\"" c)) configs " "))
     (when counsel-etags-debug
         (message "counsel-etags-ctags-ignore-config returns %s" rlt))
@@ -865,7 +892,6 @@ HASH store the previous distance."
              (d (make-vector (* (1+ length-str1) (1+ length-str2)) 0))
              ;; d is a table with lenStr2+1 rows and lenStr1+1 columns
              (row-width (1+ length-str1))
-             (rlt 0)
              (i 0)
              (j 0))
         ;; i and j are used to iterate over str1 and str2
@@ -909,35 +935,38 @@ HASH store the previous distance."
       path)))
 
 (defun counsel-etags-sort-candidates-maybe (cands strip-count is-string current-file)
-  "Sort CANDS if `counsel-etags-candidates-optimize-limit' is t.
+  "Sort CANDS by string distance.
 STRIP-COUNT strips the string before calculating distance.
 IS-STRING is t if the candidate is string.
 CURRENT-FILE is used to compare with candidate path."
   (let* ((ref (and current-file (counsel-etags--strip-path current-file strip-count))))
     (cond
-     ;; don't sort candidates
+     ;; don't sort candidates if `current-file' is nil
      ((or (not ref)
           (not counsel-etags-candidates-optimize-limit)
           (>= (length cands) counsel-etags-candidates-optimize-limit))
       cands)
 
-     ;; sort in Lisp
-     ((not (fboundp 'string-distance))
-      (let* ((h (make-hash-table :test 'equal)))
-        (sort cands `(lambda (item1 item2)
-                       (let* ((a (counsel-etags--strip-path (file-truename (if ,is-string item1 (cadr item1))) ,strip-count))
-                              (b (counsel-etags--strip-path (file-truename (if ,is-string item2 (cadr item2))) ,strip-count)))
-                         (< (counsel-etags-levenshtein-distance a ,ref ,h)
-                            (counsel-etags-levenshtein-distance b ,ref ,h)))))))
+     ; sort in C
+     ((fboundp 'string-distance)
+      ;; Emacs 27 `string-distance' is much faster than Lisp implementation.
+      (sort cands
+            `(lambda (item1 item2)
+               (let* ((a (counsel-etags--strip-path (file-truename (if ,is-string item1 (cadr item1))) ,strip-count))
+                      (b (counsel-etags--strip-path (file-truename (if ,is-string item2 (cadr item2))) ,strip-count)))
+                 (< (string-distance a ,ref t)
+                    (string-distance b ,ref t))))))
 
-     ;; Emacs 27 `string-distance' is as 100 times fast as Lisp implementation.
-     ;; sort in C
+     ;; sort in Lisp. It's slow so `counsel-etags-candidates-optimize-limit'
+     ;; limits the maximum number of candidates to be sorted
      (t
-      (sort cands `(lambda (item1 item2)
-                     (let* ((a (counsel-etags--strip-path (file-truename (if ,is-string item1 (cadr item1))) ,strip-count))
-                            (b (counsel-etags--strip-path (file-truename (if ,is-string item2 (cadr item2))) ,strip-count)))
-                       (< (string-distance a ,ref t)
-                          (string-distance b ,ref t)))))))))
+      (let* ((h (make-hash-table :test 'equal)))
+        (sort cands
+              `(lambda (item1 item2)
+                 (let* ((a (counsel-etags--strip-path (file-truename (if ,is-string item1 (cadr item1))) ,strip-count))
+                        (b (counsel-etags--strip-path (file-truename (if ,is-string item2 (cadr item2))) ,strip-count)))
+                   (< (counsel-etags-levenshtein-distance a ,ref ,h)
+                      (counsel-etags-levenshtein-distance b ,ref ,h))))))))))
 
 
 (defun counsel-etags-cache-content (tags-file)
@@ -1022,11 +1051,15 @@ CONTEXT is extra information collected before find tag definition."
          cands
          file-size
          file-content)
+    (when counsel-etags-debug
+      (message "counsel-etags-extract-cands called. tags-file=%s cached-file-size=%s tags-file-size=%s"
+               tags-file
+               (counsel-etags-cache-filesize tags-file)
+               (nth 7 (file-attributes tags-file))))
     ;; ONLY when the checksum (file size) is different from the physical file size,
     ;; update cache by reading from physical file.
     ;; Not precise but acceptable algorithm.
-    (when (and tags-file
-               (file-exists-p tags-file)
+    (when (and tags-file (file-exists-p tags-file)
                ;; TAGS file is smaller when being created.
                ;; Do NOT load incomplete tags file
                (< (counsel-etags-cache-filesize tags-file)
@@ -1042,7 +1075,7 @@ CONTEXT is extra information collected before find tag definition."
 
     ;; Get better performance by scan from beginning to end.
     (when counsel-etags-debug
-      (message "tags-file=%s tagname=%s" tags-file tagname))
+      (message "counsel-etags-extract-cands called. tags-file=%s tagname=%s" tags-file tagname))
 
     (when (and tags-file
                (setq file-content (counsel-etags-cache-content tags-file)))
@@ -1072,11 +1105,15 @@ CONTEXT is extra information collected before find tag definition."
                                                             fuzzy
                                                             context))))
 
+    (when counsel-etags-debug
+      (message "counsel-etags-collect-cands called. tags-file=%s cands=%s" tags-file cands))
     ;; current-file is used to calculated string distance.
     (setq rlt (mapcar 'car (counsel-etags-sort-candidates-maybe cands 3 nil current-file)))
     (when counsel-etags-extra-tags-files
       ;; don't sort candidate from 3rd party libraries
       (dolist (file (ff-list-replace-env-vars counsel-etags-extra-tags-files))
+        (when counsel-etags-debug
+          (message "load %s in %s" file counsel-etags-extra-tags-files))
         (when (setq cands (counsel-etags-extract-cands file
                                                        tagname
                                                        fuzzy
@@ -1097,6 +1134,7 @@ CONTEXT is extra information collected before find tag definition."
   (setq s (replace-regexp-in-string "\\." "\\\\\." s))
   (setq s (replace-regexp-in-string "\\[" "\\\\\[" s))
   (setq s (replace-regexp-in-string "\\]" "\\\\\]" s))
+  (setq s (replace-regexp-in-string "-" "\\\\-" s))
   ;; perl-regex support non-ASCII characters
   ;; Turn on `-P` from `git grep' and `grep'
   ;; the_silver_searcher and ripgrep need no setup
@@ -1327,7 +1365,8 @@ Tags might be sorted by comparing tag's path with CURRENT-FILE."
   "Find TAGNAME using FUZZY algorithm from CURRENT-FILE.
 CONTEXT is extra information collected before finding tag definition."
   (let* ((time (current-time))
-         (dir (counsel-etags-tags-file-directory)))
+         (dir (file-local-name (counsel-etags-tags-file-directory)))
+         (current-file (file-local-name current-file)))
     (when counsel-etags-debug
       (message "counsel-etags-find-tag-api called => tagname=%s fuzzy=%s dir%s current-file=%s context=%s"
                tagname
@@ -1501,6 +1540,10 @@ The tags updating might not happen."
                    (file-name-directory buffer-file-name)))
          (tags-file (and counsel-etags-tags-file-history
                          (car counsel-etags-tags-file-history))))
+
+    (when counsel-etags-debug
+      (message "counsel-etags-virtual-update-tags called. dir=%s tags-file=%s" dir tags-file))
+
     (when (and dir
                tags-file
                (string-match-p (file-name-directory (file-truename tags-file))
@@ -1517,8 +1560,8 @@ The tags updating might not happen."
 
        (t
         (setq counsel-etags-timer (current-time))
-        (let* ((tags-file (counsel-etags-locate-tags-file))
-               (dir (file-name-directory (file-truename tags-file))))
+        (let* ((dir (file-name-directory (file-truename (counsel-etags-locate-tags-file)))))
+          (if counsel-etags-debug (message "update tags in %s" dir))
           (funcall counsel-etags-update-tags-backend dir)))))))
 
 (defun counsel-etags-unquote-regex-parens (str)
@@ -1559,9 +1602,9 @@ If SYMBOL-AT-POINT is nil, don't read symbol at point."
         (setq counsel-etags-keyword (replace-regexp-in-string "\"" "\\\\\""str))))))
   counsel-etags-keyword)
 
-(defun counsel-etags-has-quick-grep ()
-  "Does ripgrep program exist?"
-  (executable-find "rg"))
+(defun counsel-etags-has-quick-grep-p ()
+  "Test if ripgrep program exist."
+  (or counsel-etags-use-ripgrep-force (executable-find "rg")))
 
 (defun counsel-etags-exclude-opts (use-cache)
   "Grep CLI options.  IF USE-CACHE is t, the options is read from cache."
@@ -1571,7 +1614,7 @@ If SYMBOL-AT-POINT is nil, don't read symbol at point."
                               counsel-etags-ignore-filenames)))
     ;; please note Windows DOS CLI only support double quotes
     (cond
-     ((counsel-etags-has-quick-grep)
+     ((counsel-etags-has-quick-grep-p)
       (concat (mapconcat (lambda (e)
                            (format "-g=\"!%s/*\"" (shell-quote-argument e)))
                          ignore-dirs " ")
@@ -1592,19 +1635,22 @@ If SYMBOL-AT-POINT is nil, don't read symbol at point."
   "Use KEYWORD and USE-CACHE to build CLI.
 Extended regex is used, like (pattern1|pattern2)."
   (cond
-   ((counsel-etags-has-quick-grep)
+   ((counsel-etags-has-quick-grep-p)
     ;; "--hidden" force ripgrep to search hidden files/directories, that's default
     ;; behavior of grep
-    (format "%s --hidden %s \"%s\" --"
-            (concat (executable-find "rg")
-                    ;; (if counsel-etags-debug " --debug")
-                    " -n -M 1024 --no-heading --color never -s --path-separator /")
+    (format "%s %s %s --hidden %s \"%s\" --"
+            ;; if rg is not in $PATH, then it's in `counsel-etags-grep-program'
+            (or (executable-find "rg") counsel-etags-grep-program)
+            ;; (if counsel-etags-debug " --debug")
+            "-n -M 1024 --no-heading --color never -s --path-separator /"
+            counsel-etags-grep-extra-arguments
             (counsel-etags-exclude-opts use-cache)
             keyword))
    (t
     ;; use extended regex always
-    (format "%s -rsnE %s \"%s\" *"
+    (format "%s -rsnE %s %s \"%s\" *"
             (or counsel-etags-grep-program (counsel-etags-guess-program "grep"))
+            counsel-etags-grep-extra-arguments
             (counsel-etags-exclude-opts use-cache)
             keyword))))
 
@@ -1631,7 +1677,7 @@ If HINT is not nil, it's used as grep hint.
 ROOT is root directory to grep."
   (interactive)
   (let* ((text (if default-keyword default-keyword
-                  (counsel-etags-read-keyword "Grep pattern: ")))
+                  (counsel-etags-read-keyword "Regular expression for grep: ")))
          (keyword (funcall counsel-etags-convert-grep-keyword text))
          (default-directory (file-truename (or root
                                                (counsel-etags-locate-project))))
@@ -1639,6 +1685,22 @@ ROOT is root directory to grep."
          (cmd (counsel-etags-grep-cli keyword nil))
          (cands (split-string (shell-command-to-string cmd) "[\r\n]+" t))
          (dir-summary (counsel-etags-dirname default-directory)))
+
+    (when (and cands
+               buffer-file-name
+               counsel-etags-sort-grep-result-p
+               counsel-etags-candidates-optimize-limit
+               ;; string-distance is faster
+               (< (length cands) (* 4 counsel-etags-candidates-optimize-limit))
+               (fboundp 'string-distance))
+      ;; grep should not waste time on lisp version of string distance
+      ;; So `string-distance' from Emacs 27 is required
+      (let* ((ref (file-relative-name buffer-file-name root)))
+        (setq cands
+              (sort cands
+                    `(lambda (a b)
+                       (< (string-distance (car (split-string a ":")) ,ref t)
+                          (string-distance (car (split-string b ":")) ,ref t)))))))
 
     (if counsel-etags-debug (message "counsel-etags-grep called => %s %s %s %s"
                                      keyword default-directory cmd cands))
@@ -1714,7 +1776,7 @@ If FORCED-TAGS-FILE is nil, the updating process might now happen."
   (counsel-etags-tag-occur-api counsel-etags-tag-history))
 
 (defun counsel-etags-find-tag-occur ()
-  "Open occur buffer for `counsel-etags-find-tag' and `counsel-etagslist-tag'."
+  "Open occur buffer for `counsel-etags-find-tag' and `counsel-etags-list-tag'."
   (counsel-etags-tag-occur-api counsel-etags-find-tag-candidates))
 
 (defun counsel-etags-grep-occur (&optional _cands)

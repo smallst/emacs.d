@@ -170,7 +170,7 @@ This function can be re-used by other major modes after compilation."
 
     ;; fic-mode has performance issue on 5000 line C++, we can always use swiper instead
     ;; don't spell check double words
-    (setq my-flyspell-check-doublon nil)
+    (setq-local wucuo-flyspell-check-doublon nil)
     ;; enable for all programming modes
     ;; http://emacsredux.com/blog/2013/04/21/camelcase-aware-editing/
     (unless (derived-mode-p 'js2-mode)
@@ -272,7 +272,6 @@ This function can be re-used by other major modes after compilation."
                         "\\.mp[34]$"
                         "\\.avi$"
                         "\\.wav$"
-                        "\\.pdf$"
                         "\\.docx?$"
                         "\\.xlsx?$"
                         ;; sub-titles
@@ -1169,10 +1168,10 @@ See https://github.com/RafayGhafoor/Subscene-Subtitle-Grabber."
       (shell-command (format "%s --dir . &" cmd-prefix))))))
 ;; }}
 
+(defvar my-sdcv-org-head-level 2)
 ;; {{ use sdcv dictionary to find big word definition
 (defun my-sdcv-format-bigword (word zipf)
   "Format WORD and ZIPF using sdcv dictionary."
-  (ignore zipf)
   (let* (rlt def)
     (local-require 'sdcv)
     ;; 2 level org format
@@ -1181,7 +1180,11 @@ See https://github.com/RafayGhafoor/Subscene-Subtitle-Grabber."
           (setq def (sdcv-search-witch-dictionary word sdcv-dictionary-complete-list))
           (setq def (replace-regexp-in-string "^-->.*" "" def))
           (setq def (replace-regexp-in-string "[\n\r][\n\r]+" "" def))
-          (setq rlt (format "** %s\n%s\n" word def)))
+          (setq rlt (format "%s %s (%s)\n%s\n"
+                            (make-string my-sdcv-org-head-level ?*)
+                            word
+                            zipf
+                            def)))
       (error nil))
     rlt))
 
@@ -1191,6 +1194,11 @@ See https://github.com/RafayGhafoor/Subscene-Subtitle-Grabber."
   (local-require 'mybigword)
   (let* ((mybigword-default-format-function 'my-sdcv-format-bigword))
     (mybigword-show-big-words-from-current-buffer)))
+;; }}
+
+;; {{ use pdf-tools to view pdf
+(when (and (display-graphic-p) *linux*)
+  (pdf-loader-install))
 ;; }}
 
 (provide 'init-misc)
