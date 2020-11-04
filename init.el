@@ -7,16 +7,22 @@
   (when (version< emacs-version minver)
     (error "Emacs v%s or higher is required." minver)))
 
-(defvar best-gc-cons-threshold
-  4000000
-  "Best default gc threshold value.  Should NOT be too big!")
+(setq user-init-file (or load-file-name (buffer-file-name)))
+(setq user-emacs-directory (file-name-directory user-init-file))
 
 (defvar my-debug nil "Enable debug mode.")
 
-;; don't GC during startup to save time
-(setq gc-cons-threshold most-positive-fixnum)
+(setq *is-a-mac* (eq system-type 'darwin))
+(setq *win64* (eq system-type 'windows-nt))
+(setq *cygwin* (eq system-type 'cygwin) )
+(setq *linux* (or (eq system-type 'gnu/linux) (eq system-type 'linux)) )
+(setq *unix* (or *linux* (eq system-type 'usg-unix-v) (eq system-type 'berkeley-unix)) )
+(setq *emacs26* (>= emacs-major-version 26))
+(setq *emacs27* (>= emacs-major-version 27))
 
-(setq emacs-load-start-time (current-time))
+;; don't GC during startup to save time
+(setq gc-cons-percentage 0.6)
+(setq gc-cons-threshold most-positive-fixnum)
 
 ;; {{ emergency security fix
 ;; https://bugs.debian.org/766397
@@ -24,17 +30,7 @@
   (defun enriched-decode-display-prop (start end &optional param)
     (list start end)))
 ;; }}
-;;----------------------------------------------------------------------------
-;; Which functionality to enable (use t or nil for true and false)
-;;----------------------------------------------------------------------------
-(setq *is-a-mac* (eq system-type 'darwin))
-(setq *win64* (eq system-type 'windows-nt))
-(setq *cygwin* (eq system-type 'cygwin) )
-(setq *linux* (or (eq system-type 'gnu/linux) (eq system-type 'linux)) )
-(setq *unix* (or *linux* (eq system-type 'usg-unix-v) (eq system-type 'berkeley-unix)) )
-(setq *emacs24* (>= emacs-major-version 24))
-(setq *emacs25* (>= emacs-major-version 25))
-(setq *emacs26* (>= emacs-major-version 26))
+
 (setq *no-memory* (cond
                    (*is-a-mac*
                     ;; @see https://discussions.apple.com/thread/1753088
@@ -51,15 +47,7 @@
   "Directory of site-lisp")
 
 (defconst my-lisp-dir (concat my-emacs-d "lisp")
-  "Directory of lisp")
-
-;; @see https://www.reddit.com/r/emacs/comments/55ork0/is_emacs_251_noticeably_slower_than_245_on_windows/
-;; Emacs 25 does gc too frequently
-(when *emacs25*
-  ;; (setq garbage-collection-messages t) ; for debug
-  (setq best-gc-cons-threshold (* 64 1024 1024))
-  (setq gc-cons-percentage 0.5)
-  (run-with-idle-timer 5 t #'garbage-collect))
+  "Directory of lisp.")
 
 (defun my-vc-merge-p ()
   "Use Emacs for git merge only?"
@@ -70,16 +58,17 @@
   (when (or (not maybe-disabled) (not (my-vc-merge-p)))
     (load (file-truename (format "%s/%s" my-lisp-dir pkg)) t t)))
 
-(defun local-require (pkg)
-  "Require PKG in site-lisp directory."
-  (unless (featurep pkg)
-    (load (expand-file-name
-           (cond
-            ((eq pkg 'go-mode-load)
-             (format "%s/go-mode/%s" my-site-lisp-dir pkg))
-            (t
-             (format "%s/%s/%s" my-site-lisp-dir pkg pkg))))
-          t t)))
+(defun my-add-subdirs-to-load-path (lisp-dir)
+  "Add sub-directories under LISP-DIR into `load-path'."
+  (let* ((default-directory lisp-dir))
+    (setq load-path
+          (append
+           (delq nil
+                 (mapcar (lambda (dir)
+                           (unless (string-match-p "^\\." dir)
+                             (expand-file-name dir)))
+                         (directory-files my-site-lisp-dir)))
+           load-path))))
 
 ;; @see https://www.reddit.com/r/emacs/comments/3kqt6e/2_easy_little_known_steps_to_speed_up_emacs_start/
 ;; Normally file-name-handler-alist is set to
@@ -88,13 +77,6 @@
 ;; ("\\`/:" . file-name-non-special))
 ;; Which means on every .el and .elc file loaded during start up, it has to runs those regexps against the filename.
 (let* ((file-name-handler-alist nil))
-
-  ;; ;; {{
-  ;; (require 'benchmark-init-modes)
-  ;; (require 'benchmark-init)
-  ;; (benchmark-init/activate)
-  ;; ;; `benchmark-init/show-durations-tree' to show benchmark result
-  ;; ;; }}
 
   (require-init 'init-autoload)
   ;; `package-initialize' takes 35% of startup time
@@ -148,11 +130,11 @@
   ;; handy tools though not must have
   (require-init 'init-misc t)
 
+  ;; (require-init 'init-auctex)
   (require-init 'init-dying-mode)
   (require-init 'init-php-mode)
   (require-init 'init-coffee-mode)
   (require-init 'init-dot-mode)
-  (require-init 'init-auctex)
   (require-init 'init-unicad)
   ;(require 'ox-bibtex)
   (require-init 'init-pdf)
@@ -187,11 +169,17 @@
     ;; It's dependent on *.el in `my-site-lisp-dir'
     (load (expand-file-name "~/.custom.el") t nil)))
 
-(setq gc-cons-threshold best-gc-cons-threshold)
 
-(when (require 'time-date nil t)
-  (message "Emacs startup time: %d seconds."
-           (time-to-seconds (time-since emacs-load-start-time))))
+;; @see https://www.reddit.com/r/emacs/comments/55ork0/is_emacs_251_noticeably_slower_than_245_on_windows/
+;; Emacs 25 does gc too frequently
+;; (setq garbage-collection-messages t) ; for debug
+(defun my-cleanup-gc ()
+  "Clean up gc."
+  (setq gc-cons-threshold  67108864) ; 64M
+  (setq gc-cons-percentage 0.1) ; original value
+  (garbage-collect))
+
+(run-with-idle-timer 4 nil #'my-cleanup-gc)
 
 ;;; Local Variables:
 ;;; no-byte-compile: t

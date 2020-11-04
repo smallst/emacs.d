@@ -14,7 +14,7 @@
 
 (defun lazyflymake-lua-err-line-pattern ()
   "Return error line pattern.
-If return a list containing the pattern, `flymake-err-line-patterns' use the
+If return a list containing the pattern, `flymake-err-line-patterns' uses the
 list and is also converted into a buffer local variable.
 If return the pattern, it's is pushed to `flymake-err-line-patterns'.
 If return nil, nothing need be done."
@@ -24,8 +24,8 @@ If return nil, nothing need be done."
   "Lua syntax check init."
   (when (executable-find lazyflymake-lua-program)
     (if lazyflymake-debug (message "lazyflymake-lua-init called"))
-    (list lazyflymake-lua-program
-          (list "-p" (lazyflymake-sdk-code-file)))))
+    (let* ((file (lazyflymake-sdk-code-file)))
+      (and file (list lazyflymake-lua-program (list "-p" file))))))
 
 (provide 'lazyflymake-lua)
 ;;; lazyflymake-lua.el ends here

@@ -1,11 +1,25 @@
 ;; -*- coding: utf-8; lexical-binding: t; -*-
 
 (defun my-initialize-package ()
-  (unless nil ;package--initialized
-    ;; optimization, no need to activate all the packages so early
-    (setq package-enable-at-startup nil)
+  ;; optimization, no need to activate all the packages so early
+  (setq package-enable-at-startup nil)
+  (cond
+   (*emacs27*
+    ;; you still need run `M-x package-quickstart-refresh' at least once
+    ;; to generate a big file containing `autoload' statements
+    (setq package-quick-start t)
+
+    ;; esup need call `package-initialize'
+    ;; @see https://github.com/jschaf/esup/issues/84
+    (when (or (featurep 'esup-child)
+              (fboundp 'profile-dotemacs)
+              (not (file-exists-p (concat my-emacs-d "elpa")))
+              (my-vc-merge-p)
+              noninteractive)
+      (package-initialize)))
+   (t
     ;; @see https://www.gnu.org/software/emacs/news/NEWS.27.1
-    (package-initialize)))
+    (package-initialize))))
 
 (my-initialize-package)
 
@@ -13,20 +27,19 @@
 ;; Please add the package name into `melpa-include-packages'
 ;; if it's not visible after  `list-packages'.
 (defvar melpa-include-packages
-  '(ace-window ; lastest stable is released on year 2014
+  '(ace-window ; latest stable is released on year 2014
     auto-package-update
     nov
     cnfont
     bbdb
+    esup ; Emacs start up profiler
     native-complete
     company-native-complete
     js2-mode ; need new features
     git-timemachine ; stable version is broken when git rename file
-    evil-textobj-syntax
     undo-fu
     command-log-mode
     ;; lsp-mode ; stable version has performance issue, but unstable version sends too many warnings
-    edit-server ; use Emacs to edit textarea in browser, need browser addon
     vimrc-mode
     rjsx-mode ; fixed the indent issue in jsx
     package-lint ; for melpa pull request only
@@ -82,7 +95,6 @@
     groovy-mode
     company ; I won't wait another 2 years for stable
     simple-httpd
-    dsvn
     findr
     mwe-log-commands
     noflet
@@ -227,7 +239,6 @@ You still need modify `package-archives' in \"init-elpa.el\" to PERMANENTLY use 
 (require-package 'avy)
 (require-package 'popup) ; some old package need it
 (require-package 'auto-yasnippet)
-(require-package 'ace-link)
 (require-package 'csv-mode)
 (require-package 'expand-region) ; I prefer stable version
 (require-package 'fringe-helper)
@@ -257,7 +268,6 @@ You still need modify `package-archives' in \"init-elpa.el\" to PERMANENTLY use 
 (require-package 'scratch)
 (require-package 'rainbow-delimiters)
 (require-package 'textile-mode)
-(require-package 'dsvn)
 (require-package 'git-timemachine)
 (require-package 'exec-path-from-shell)
 (require-package 'ivy)
@@ -265,7 +275,6 @@ You still need modify `package-archives' in \"init-elpa.el\" to PERMANENTLY use 
 (require-package 'counsel) ; counsel => swiper => ivy
 (require-package 'find-file-in-project)
 (require-package 'counsel-bbdb)
-(require-package 'ibuffer-vc)
 (require-package 'command-log-mode)
 (require-package 'regex-tool)
 (require-package 'groovy-mode)
@@ -297,7 +306,7 @@ You still need modify `package-archives' in \"init-elpa.el\" to PERMANENTLY use 
 (require-package 'company-native-complete)
 (require-package 'company-c-headers)
 (require-package 'company-statistics)
-(require-package 'lsp-mode)
+(if *emacs26* (require-package 'lsp-mode))
 (require-package 'elpy)
 (require-package 'legalese)
 (require-package 'simple-httpd)
@@ -322,8 +331,6 @@ You still need modify `package-archives' in \"init-elpa.el\" to PERMANENTLY use 
 (require-package 'evil-nerd-commenter)
 (require-package 'evil-surround)
 (require-package 'evil-visualstar)
-(require-package 'evil-args)
-(require-package 'evil-textobj-syntax)
 (require-package 'slime)
 (require-package 'pug-mode)
 (require-package 'undo-fu)
@@ -342,14 +349,13 @@ You still need modify `package-archives' in \"init-elpa.el\" to PERMANENTLY use 
 (require-package 'cdlatex)
 (require-package 'nov) ; read epub
 (require-package 'rust-mode)
-(require-package 'benchmark-init)
 ;; (require-package 'langtool) ; my own patched version is better
 (require-package 'typescript-mode)
-(require-package 'edit-server)
 ;; run "M-x pdf-tool-install" at debian and open pdf in GUI Emacs
 (require-package 'pdf-tools)
 (require-package 'pyim)
 (require-package 'pyim-wbdict) ; someone may use wubi IME, not me
+(require-package 'esup)
 
 ;; {{ Fixed expiring GNU ELPA keys
 ;; GNU ELPA GPG key will expire on Sep-2019. So we need install this package to
@@ -368,115 +374,116 @@ You still need modify `package-archives' in \"init-elpa.el\" to PERMANENTLY use 
   (dolist (theme popular-themes)
     (require-package theme)))
 
-(when *emacs25*
-  (require-package 'magit) ; Magit 2.12 is the last feature release to support Emacs 24.4.
-  ;; most popular 100 themes
-  (my-install-popular-themes
-   '(
-     afternoon-theme
-     alect-themes
-     ample-theme
-     ample-zen-theme
-     anti-zenburn-theme
-     apropospriate-theme
-     atom-dark-theme
-     atom-one-dark-theme
-     badwolf-theme
-     base16-theme
-     birds-of-paradise-plus-theme
-     bubbleberry-theme
-     busybee-theme
-     cherry-blossom-theme
-     clues-theme
-     color-theme-sanityinc-solarized
-     color-theme-sanityinc-tomorrow
-     cyberpunk-theme
-     dakrone-theme
-     darkburn-theme
-     darkmine-theme
-     darkokai-theme
-     darktooth-theme
-     django-theme
-     doom-themes
-     dracula-theme
-     espresso-theme
-     exotica-theme
-     eziam-theme
-     fantom-theme
-     farmhouse-theme
-     flatland-theme
-     flatui-theme
-     gandalf-theme
-     gotham-theme
-     grandshell-theme
-     gruber-darker-theme
-     gruvbox-theme
-     hc-zenburn-theme
-     hemisu-theme
-     heroku-theme
-     inkpot-theme
-     ir-black-theme
-     jazz-theme
-     jbeans-theme
-     kaolin-themes
-     leuven-theme
-     light-soap-theme
-     lush-theme
-     madhat2r-theme
-     majapahit-theme
-     material-theme
-     minimal-theme
-     moe-theme
-     molokai-theme
-     monochrome-theme
-     monokai-theme
-     mustang-theme
-     naquadah-theme
-     noctilux-theme
-     nord-theme
-     obsidian-theme
-     occidental-theme
-     oldlace-theme
-     omtose-phellack-theme
-     organic-green-theme
-     phoenix-dark-mono-theme
-     phoenix-dark-pink-theme
-     planet-theme
-     professional-theme
-     purple-haze-theme
-     railscasts-theme
-     rebecca-theme
-     reverse-theme
-     seti-theme
-     smyx-theme
-     soft-charcoal-theme
-     soft-morning-theme
-     soft-stone-theme
-     solarized-theme
-     soothe-theme
-     spacegray-theme
-     spacemacs-theme
-     srcery-theme
-     subatomic-theme
-     subatomic256-theme
-     sublime-themes
-     sunny-day-theme
-     tango-2-theme
-     tango-plus-theme
-     tangotango-theme
-     tao-theme
-     toxi-theme
-     twilight-anti-bright-theme
-     twilight-bright-theme
-     twilight-theme
-     ujelly-theme
-     underwater-theme
-     vscode-dark-plus-theme
-     white-sand-theme
-     zen-and-art-theme
-     zenburn-theme
-     zerodark-theme
-     )))
+(require-package 'magit)
+(require-package 'which-key)
+
+;; most popular 100 themes
+(my-install-popular-themes
+ '(
+   afternoon-theme
+   alect-themes
+   ample-theme
+   ample-zen-theme
+   anti-zenburn-theme
+   apropospriate-theme
+   atom-dark-theme
+   atom-one-dark-theme
+   badwolf-theme
+   base16-theme
+   birds-of-paradise-plus-theme
+   bubbleberry-theme
+   busybee-theme
+   cherry-blossom-theme
+   clues-theme
+   color-theme-sanityinc-solarized
+   color-theme-sanityinc-tomorrow
+   cyberpunk-theme
+   dakrone-theme
+   darkburn-theme
+   darkmine-theme
+   darkokai-theme
+   darktooth-theme
+   django-theme
+   doom-themes
+   dracula-theme
+   espresso-theme
+   exotica-theme
+   eziam-theme
+   fantom-theme
+   farmhouse-theme
+   flatland-theme
+   flatui-theme
+   gandalf-theme
+   gotham-theme
+   grandshell-theme
+   gruber-darker-theme
+   gruvbox-theme
+   hc-zenburn-theme
+   hemisu-theme
+   heroku-theme
+   inkpot-theme
+   ir-black-theme
+   jazz-theme
+   jbeans-theme
+   kaolin-themes
+   leuven-theme
+   light-soap-theme
+   lush-theme
+   madhat2r-theme
+   majapahit-theme
+   material-theme
+   minimal-theme
+   moe-theme
+   molokai-theme
+   monochrome-theme
+   monokai-theme
+   mustang-theme
+   naquadah-theme
+   noctilux-theme
+   nord-theme
+   obsidian-theme
+   occidental-theme
+   oldlace-theme
+   omtose-phellack-theme
+   organic-green-theme
+   phoenix-dark-mono-theme
+   phoenix-dark-pink-theme
+   planet-theme
+   professional-theme
+   purple-haze-theme
+   railscasts-theme
+   rebecca-theme
+   reverse-theme
+   seti-theme
+   smyx-theme
+   soft-charcoal-theme
+   soft-morning-theme
+   soft-stone-theme
+   solarized-theme
+   soothe-theme
+   spacegray-theme
+   spacemacs-theme
+   srcery-theme
+   subatomic-theme
+   subatomic256-theme
+   sublime-themes
+   sunny-day-theme
+   tango-2-theme
+   tango-plus-theme
+   tangotango-theme
+   tao-theme
+   toxi-theme
+   twilight-anti-bright-theme
+   twilight-bright-theme
+   twilight-theme
+   ujelly-theme
+   underwater-theme
+   vscode-dark-plus-theme
+   white-sand-theme
+   zen-and-art-theme
+   zenburn-theme
+   zerodark-theme
+   ))
 ;; }}
 
 ;; kill buffer without my confirmation
