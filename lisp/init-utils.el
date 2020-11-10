@@ -214,10 +214,12 @@ If HINT is empty, use symbol at point."
 (defvar cached-normal-file-full-path nil)
 
 (defun buffer-too-big-p ()
+  "Test if current buffer is too big."
   ;; 5000 lines
   (> (buffer-size) (* 5000 80)))
 
-(defun file-too-big-p (file)
+(defun my-file-too-big-p (file)
+  "Test if FILE is too big."
   (> (nth 7 (file-attributes file))
      (* 5000 64)))
 
@@ -250,19 +252,24 @@ If HINT is empty, use symbol at point."
     rlt))
 
 (defvar my-mplayer-extra-opts ""
-  "Extra options for mplayer (ao or vo setup).  For example,
-you can '(setq my-mplayer-extra-opts \"-ao alsa -vo vdpau\")'.")
+  "Extra options for mplayer (ao or vo setup).
+For example, you can '(setq my-mplayer-extra-opts \"-ao alsa -vo vdpau\")'.")
 
 (defun my-guess-mplayer-path ()
+  "Guess cli program mplayer's path."
   (let* ((rlt "mplayer"))
     (cond
-     (*is-a-mac* (setq rlt "mplayer -quiet"))
+     (*is-a-mac*
+      (setq rlt "mplayer -quiet"))
+
      (*linux*
-      (setq rlt (format "mplayer -quiet -stop-xscreensaver %s" my-mplayer-extra-opts)))
+      (setq rlt (format "mplayer -quiet -stop-xscreensaver %s"
+                        my-mplayer-extra-opts)))
      (*cygwin*
       (if (file-executable-p "/cygdrive/c/mplayer/mplayer.exe")
           (setq rlt "/cygdrive/c/mplayer/mplayer.exe -quiet")
         (setq rlt "/cygdrive/d/mplayer/mplayer.exe -quiet")))
+
      (t ; windows
       (if (file-executable-p "c:\\\\mplayer\\\\mplayer.exe")
           (setq rlt "c:\\\\mplayer\\\\mplayer.exe -quiet")
