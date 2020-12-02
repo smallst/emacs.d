@@ -85,13 +85,15 @@
   (require-init 'init-utils)
   (require-init 'init-file-type)
   (require-init 'init-elpa)
-  (require-init 'init-exec-path t) ;; Set up $PATH
+
+  ;; for unit test
+  (when my-disable-idle-timer
+    (my-add-subdirs-to-load-path (file-name-as-directory my-site-lisp-dir)))
+
   ;; Any file use flyspell should be initialized after init-spelling.el
   (require-init 'init-spelling t)
-  (require-init 'init-uniquify t)
   (require-init 'init-ibuffer t)
   (require-init 'init-ivy)
-  (require-init 'init-hippie-expand)
   (require-init 'init-windows)
   (require-init 'init-markdown t)
   (require-init 'init-javascript t)
@@ -155,7 +157,9 @@
   ;; Adding directories under "site-lisp/" to `load-path' slows
   ;; down all `require' statement. So we do this at the end of startup
   ;; NO ELPA package is dependent on "site-lisp/".
-  (my-add-subdirs-to-load-path (file-name-as-directory my-site-lisp-dir))
+  (unless my-disable-idle-timer
+    (my-add-subdirs-to-load-path (file-name-as-directory my-site-lisp-dir)))
+
   (require-init 'init-flymake t)
 
   (unless (my-vc-merge-p)

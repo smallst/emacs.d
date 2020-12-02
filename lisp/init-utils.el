@@ -50,10 +50,9 @@
   "Can use tags file to build imenu function"
   (my-ensure 'counsel-etags)
   (and (locate-dominating-file default-directory "TAGS")
-       ;; ctags needs extra setup to extract typescript tags
-       (file-exists-p counsel-etags-ctags-options-file)
-       (memq major-mode '(typescript-mode
-                          js-mode))))
+       ;; latest universal ctags has built in parser for javacript/typescript
+       (counsel-etags-universal-ctags-p "ctags")
+       (memq major-mode '(typescript-mode js-mode javascript-mode))))
 
 ;; {{ copied from http://ergoemacs.org/emacs/elisp_read_file_content.html
 (defun my-get-string-from-file (file)
@@ -429,7 +428,7 @@ If STEP is 1,  search in forward direction, or else in backward direction."
   (let* ((region (my-comint-current-input-region)))
     (string-trim (buffer-substring-no-properties (car region) (cdr region)))))
 
-(defun my-imenu-items (&optional index-function)
+(defun my-rescan-imenu-items (&optional index-function)
   "Get imenu items using INDEX-FUNCTION."
   (my-ensure 'imenu)
   (let* ((imenu-auto-rescan t)
@@ -486,6 +485,48 @@ Copied from 3rd party package evil-textobj."
       (setq end (1- forward-none-space-point))))
 
     (cons start (1+ end))))
+
+(defun my-pinyinlib-build-regexp-string (str)
+  "Build pinyin regexp from STR."
+  (my-ensure 'pinyinlib)
+  (let* (rlt (i 0) ch)
+    (while (< i (length str))
+      (setq ch (elt str i))
+      (setq rlt (concat rlt
+                        (cond
+                         ((and (<= ?a ch) (<= ch ?z))
+                          (pinyinlib-build-regexp-char ch))
+                         (t
+                          (char-to-string ch)))))
+      (setq i (1+ i)))
+    rlt))
+
+(defvar my-disable-idle-timer nil
+  "Function passed to `my-run-with-idle-timer' is run immediately.")
+
+(defun my-run-with-idle-timer (seconds func)
+  "After SECONDS, run function FUNC once."
+  (cond
+   (my-disable-idle-timer
+    (funcall func))
+   (t
+    (run-with-idle-timer seconds nil func))))
+
+(defun my-get-closest-imenu-item (cands)
+  "Return closest imen item from CANDS."
+  (let* ((pos (point))
+         closest)
+    (dolist (c cands)
+      (let* ((item (cdr c))
+             (m (cdr item)))
+        (when (and m (<= (marker-position m) pos))
+          (cond
+           ((not closest)
+            (setq closest item))
+           ((< (- pos (marker-position m))
+               (- pos (marker-position (cdr closest))))
+            (setq closest item))))))
+    closest))
 
 (provide 'init-utils)
 ;;; init-utils.el ends here

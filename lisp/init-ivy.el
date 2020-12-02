@@ -1,6 +1,6 @@
 ;; -*- coding: utf-8; lexical-binding: t; -*-
 
-(run-with-idle-timer 1 nil #'ivy-mode) ; it enables ivy UI for `kill-buffer'
+(my-run-with-idle-timer 1 #'ivy-mode) ; it enables ivy UI for `kill-buffer'
 
 (with-eval-after-load 'counsel
   ;; automatically pick up cygwin cli tools for counsel
@@ -209,11 +209,7 @@ If N is nil, use `ivy-mode' to browse `kill-ring'."
                                 (kill-new plain-str)))))
 
 (defun ivy-switch-buffer-matcher-pinyin (regexp candidates)
-  (my-ensure 'pinyinlib)
-  (let* ((pys (split-string regexp "[ \t]+"))
-         (regexp (format ".*%s.*"
-                         (mapconcat 'pinyinlib-build-regexp-string pys ".*"))))
-    (ivy--switch-buffer-matcher regexp candidates)))
+  (ivy--switch-buffer-matcher (my-pinyinlib-build-regexp-string regexp) candidates))
 
 (defun ivy-switch-buffer-by-pinyin ()
   "Switch to another buffer."
@@ -245,16 +241,16 @@ If N is nil, use `ivy-mode' to browse `kill-ring'."
   (let* ((len (length str)))
     (cond
      ;; do nothing
-     ((<= (length str) 0))
+     ((<= (length str) 1))
 
-     ;; If the first charater of input in ivy is ":",
+     ;; If the first character of input in ivy is ":",
      ;; remaining input is converted into Chinese pinyin regex.
-     ;; For example, input "/ic" match "isController" or "isCollapsed"
      ((string= (substring str 0 1) ":")
-      (setq str (pinyinlib-build-regexp-string (substring str 1 len) t)))
+      (setq str (my-pinyinlib-build-regexp-string (substring str 1 len))))
 
-     ;; If the first charater of input in ivy is "/",
+     ;; If the first character of input in ivy is "/",
      ;; remaining input is converted to pattern to search camel case word
+     ;; For example, input "/ic" match "isController" or "isCollapsed"
      ((string= (substring str 0 1) "/")
       (let* ((rlt "")
              (i 0)
@@ -286,18 +282,7 @@ If N is nil, use `ivy-mode' to browse `kill-ring'."
          (not (memq major-mode '(pdf-view-mode))))
     (let* ((cands (counsel--imenu-candidates))
            (pre-selected (thing-at-point 'symbol))
-           (pos (point))
-           closest)
-      (dolist (c cands)
-        (let* ((item (cdr c))
-               (m (cdr item)))
-          (when (and m (<= (marker-position m) pos))
-            (cond
-             ((not closest)
-              (setq closest item))
-             ((< (- pos (marker-position m))
-                 (- pos (marker-position (cdr closest))))
-              (setq closest item))))))
+           (closest (my-get-closest-imenu-item cands)))
       (if closest (setq pre-selected (car closest)))
       (ivy-read "imenu items: " cands
                 :preselect pre-selected

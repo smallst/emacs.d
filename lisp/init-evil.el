@@ -36,7 +36,7 @@
 And \"%\" key is also restored to `evil-jump-item'.")
 
 ;; {{ @see https://github.com/timcharper/evil-surround for tutorial
-(run-with-idle-timer 2 nil #'global-evil-surround-mode)
+(my-run-with-idle-timer 2 #'global-evil-surround-mode)
 (with-eval-after-load 'evil-surround
   (defun evil-surround-prog-mode-hook-setup ()
     "Set up surround shortcuts."
@@ -64,7 +64,7 @@ And \"%\" key is also restored to `evil-jump-item'.")
 
 ;; {{ For example, press `viW*`
 (setq evil-visualstar/persistent t)
-(run-with-idle-timer 2 nil #'global-evil-visualstar-mode)
+(my-run-with-idle-timer 2 #'global-evil-visualstar-mode)
 ;; }}
 
 ;; ffip-diff-mode (read only) evil setup
@@ -497,13 +497,14 @@ If INCLUSIVE is t, the text object is inclusive."
   :prefix ","
   :states '(normal visual))
 
-(defun my-rename-thing-at-point ()
-  "Rename thing at point."
-  (interactive)
+(defun my-rename-thing-at-point (&optional n)
+  "Rename thing at point.
+If N > 0, only occurrences in current N lines are renamed."
+  (interactive "P")
   (cond
    ((derived-mode-p 'js2-mode)
     ;; use `js2-mode' parser, much smarter and works in any scope
-    (js2hl-rename-thing-at-point))
+    (js2hl-rename-thing-at-point n))
    (t
     ;; simple string search/replace in function scope
     (evilmr-replace-in-defun))))
@@ -557,6 +558,7 @@ If INCLUSIVE is t, the text object is inclusive."
   "wj" 'evil-window-down
   ;; }}
   "rv" 'my-rename-thing-at-point
+  "nm" 'js2hl-add-namespace-to-thing-at-point
   "rb" 'evilmr-replace-in-buffer
   "ts" 'evilmr-tag-selected-region ;; recommended
   "rt" 'counsel-etags-recent-tag
@@ -570,8 +572,8 @@ If INCLUSIVE is t, the text object is inclusive."
   "gl" 'my-git-log-trace-definition ; find history of a function or range
   "sh" 'my-select-from-search-text-history
   "rjs" 'run-js
-  "jsr" 'js-send-region
-  "jsb" 'js-clear-send-buffer
+  "jsr" 'js-comint-send-region
+  "jsb" 'my-js-clear-send-buffer
   "kb" 'kill-buffer-and-window ;; "k" is preserved to replace "C-g"
   "ls" 'highlight-symbol
   "lq" 'highlight-symbol-query-replace
@@ -736,17 +738,6 @@ If INCLUSIVE is t, the text object is inclusive."
   "tf" 'js2-mode-toggle-hide-functions)
 ;; }}
 
-(defun my-evil-delete-hack (orig-func &rest args)
-  "Press `dd' to delete lines in `wgrep-mode' in evil directly."
-  ;; make buffer writable
-  (if (and (boundp 'wgrep-prepared) wgrep-prepared)
-      (wgrep-toggle-readonly-area))
-  (apply orig-func args)
-  ;; make buffer read-only
-  (if (and (boundp 'wgrep-prepared) wgrep-prepared)
-      (wgrep-toggle-readonly-area)))
-(advice-add 'evil-delete :around #'my-evil-delete-hack)
-
 ;; {{ Use `;` as leader key, for searching something
 (general-create-definer my-semicolon-leader-def
   :prefix ";"
@@ -810,7 +801,7 @@ If INCLUSIVE is t, the text object is inclusive."
 ;; }}
 
 ;; {{ evil-nerd-commenter
-(run-with-idle-timer 2 nil #'evilnc-default-hotkeys)
+(my-run-with-idle-timer 2 #'evilnc-default-hotkeys)
 (define-key evil-motion-state-map "gc" 'evilnc-comment-operator) ; same as doom-emacs
 
 (defun my-current-line-html-p (paragraph-region)
@@ -849,14 +840,14 @@ If INCLUSIVE is t, the text object is inclusive."
 ;; }}
 
 ;; {{ `evil-matchit'
-(run-with-idle-timer 2 nil #'global-evil-matchit-mode)
+(my-run-with-idle-timer 2 #'global-evil-matchit-mode)
 ;; }}
 
 ;; {{ evil-exchange
 ;; press gx twice to exchange, gX to cancel
 ;; change default key bindings (if you want) HERE
 ;; (setq evil-exchange-key (kbd "zx"))
-(run-with-idle-timer 4 nil #'evil-exchange-install)
+(my-run-with-idle-timer 4 #'evil-exchange-install)
 ;; }}
 
 ;; {{ @see https://github.com/syl20bnr/spacemacs/blob/master/doc/DOCUMENTATION.org#replacing-text-with-iedit
@@ -869,7 +860,7 @@ If INCLUSIVE is t, the text object is inclusive."
 ;; }}
 
 ;; {{ Evil’s f/F/t/T command can search PinYin ,
-(run-with-idle-timer 4 nil #'evil-find-char-pinyin-mode)
+(my-run-with-idle-timer 4 #'evil-find-char-pinyin-mode)
 ;; }}
 
 ;; ;; In insert mode, press "fg" in 0.3 second to trigger my-counsel-company
