@@ -196,6 +196,7 @@ When fixing a typo, avoid pass camel case option to cli program."
              rlt))))
 ;; }}
 
+
 (with-eval-after-load 'wucuo
   ;; {{ wucuo is used to check camel cased code and plain text.  Code is usually written
   ;; in English. If your code uses other language (Spanish?),
