@@ -138,13 +138,44 @@ This function can be re-used by other major modes after compilation."
       (winner-undo)
       (message "NO COMPILATION ERRORS!"))))
 
+(defun my-normal-word-before-point-p (position n fn)
+  "A normal word exists before POSITION.  N characters before current point is checked.
+FN checks these characters belong to normal word characters."
+  (save-excursion
+    (goto-char position)
+    ;; sample N characters before POSITION
+    (let* ((rlt t)
+           (i 0))
+      (while (and (< i n) rlt)
+        (let* ((c (char-before (- (point) i))))
+          (when (not (and c (funcall fn c)))
+            (setq rlt nil)))
+        (setq i (1+ i)))
+      rlt)))
+
 (defun my-electric-pair-inhibit (char)
-  (or
-   ;; input single/double quotes at the end of word
-   (and (memq char '(34 39))
-        (char-before (1- (point)))
-        (eq (char-syntax (char-before (1- (point)))) ?w))
-   (electric-pair-conservative-inhibit char)))
+  "Customize electric pair when input CHAR."
+  (let* (rlt
+         (quote-chars '(34 39))
+         (word-fn (lambda (c)
+                    (or (and (<= ?a c) (<= c ?z))
+                        (and (<= ?A c) (<= c ?Z))
+                        (and (<= ?0 c) (<= c ?9))))))
+    (cond
+     ((and (memq major-mode '(minibuffer-inactive-mode))
+           (not (string-match "^Eval:" (buffer-string))))
+      (setq rlt t))
+
+     ;; Don't insert extra single/double quotes at the end of word
+     ;; Also @see https://github.com/redguardtoo/emacs.d/issues/892#issuecomment-740259242
+     ((and (memq (char-before (point)) quote-chars)
+           (my-normal-word-before-point-p (1- (point)) 4 word-fn))
+      (setq rlt t))
+
+     (t
+      (setq rlt (electric-pair-default-inhibit char))))
+
+    rlt))
 
 (with-eval-after-load 'flymake
   (setq flymake-gui-warnings-enabled nil))
@@ -180,7 +211,6 @@ This function can be re-used by other major modes after compilation."
     (unless (derived-mode-p 'js2-mode)
       (subword-mode 1))
 
-    (setq-default electric-pair-inhibit-predicate 'my-electric-pair-inhibit)
     (electric-pair-mode 1)
 
     ;; eldoc, show API doc in minibuffer echo area
@@ -1142,5 +1172,8 @@ See https://github.com/RafayGhafoor/Subscene-Subtitle-Grabber."
   ;; I don't use those exec path anyway.
   (my-run-with-idle-timer 4 #'exec-path-from-shell-initialize))
 ;; }}
+
+(with-eval-after-load 'elec-pair
+  (setq electric-pair-inhibit-predicate 'my-electric-pair-inhibit))
 
 (provide 'init-misc)
