@@ -70,6 +70,7 @@
     molokai-theme
     spacemacs-theme
     leuven-theme
+    elpy ; use latest elpy since Python package API changes
     sublime-themes
     tangotango-theme
     darkburn-theme
