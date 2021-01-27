@@ -32,6 +32,8 @@
 (defvar melpa-include-packages
   '(ace-window ; latest stable is released on year 2014
     ace-pinyin
+    pos-tip
+    racket-mode
     auto-package-update
     nov
     cnfont
@@ -41,6 +43,7 @@
     company-native-complete
     js2-mode ; need new features
     git-timemachine ; stable version is broken when git rename file
+    highlight-symbol
     undo-fu
     command-log-mode
     ;; lsp-mode ; stable version has performance issue, but unstable version sends too many warnings
@@ -382,6 +385,7 @@ You still need modify `package-archives' in \"init-elpa.el\" to PERMANENTLY use 
 (require-package 'magit)
 (require-package 'ace-pinyin)
 (require-package 'which-key)
+(require-package 'highlight-symbol)
 
 ;; speed up CI
 (unless my-disable-idle-timer
