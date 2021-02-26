@@ -80,7 +80,7 @@
 ;;     (setq counsel-etags-extra-tags-files
 ;;           '("./TAGS" "/usr/include/TAGS" "$PROJ1/include/TAGS"))
 ;;
-;;   Files in `counsel-etags-extra-tags-files' have only symbol with absolute path.
+;;   Files in `counsel-etags-extra-tags-files' should have symbols with absolute path only.
 ;;
 ;; - You can set up `counsel-etags-ignore-directories' and `counsel-etags-ignore-filenames',
 ;;   (with-eval-after-load 'counsel-etags
@@ -201,10 +201,12 @@ If rg is not in $PATH, then it should be defined in `counsel-etags-grep-program'
   :group 'counsel-etags
   :type 'boolean)
 
-;; @see https://github.com/abo-abo/swiper/issues/2351
 (defcustom counsel-etags-ripgrep-default-options
-  (concat "-n -M 1024 --no-heading --color never -s --path-separator "
-          (if (eq system-type 'windows-nt) "//" "/"))
+  ;; @see https://github.com/BurntSushi/ripgrep/issues/501
+  ;; some shell will expand "/" to a complete file path.
+  ;; so try to avoid "/" in shell
+  (format "-n -M 1024 --no-heading --color never -s %s"
+          (if (eq system-type 'windows-nt) "--path-separator \"\x2f\"" ""))
   "Default options passed to ripgrep command line program."
   :group 'counsel-etags
   :type 'boolean)
@@ -1237,6 +1239,8 @@ Focus on TAGNAME if it's not nil."
   (let* ((tags-file (counsel-etags-locate-tags-file))
          src-dir)
     (when (and (not tags-file)
+               ;; No need to hint after user set `counsel-etags-extra-tags-files'
+               (not counsel-etags-extra-tags-files)
                (not counsel-etags-can-skip-project-root))
       (setq src-dir (read-directory-name "Ctags will scan code at:"
                                          (counsel-etags-locate-project)))
@@ -1356,7 +1360,7 @@ Tags might be sorted by comparing tag's path with CURRENT-FILE."
                current-file))
     ;; Dir could be nil. User could use `counsel-etags-extra-tags-files' instead
     (cond
-     ((not dir)
+     ((and (not dir) (not counsel-etags-extra-tags-files))
       (message "Tags file is not ready yet."))
      ((not tagname)
       ;; OK, need use ivy-read to find candidate
@@ -1491,7 +1495,7 @@ That's the known issue of Emacs Lisp.  The program itself is perfectly fine."
   (let* ((tagname (counsel-etags-tagname-at-point)))
     (cond
      (tagname
-        (counsel-etags-find-tag-api tagname nil buffer-file-name))
+      (counsel-etags-find-tag-api tagname nil buffer-file-name))
      (t
       (message "No tag at point")))))
 
@@ -1534,20 +1538,23 @@ The tags updating might not happen."
                (string-match-p (file-name-directory (file-truename tags-file))
                                (file-truename dir)))
       (cond
-       ((not counsel-etags-timer)
+       ((or (not counsel-etags-timer)
+            (> (- (float-time (current-time)) (float-time counsel-etags-timer))
+               counsel-etags-update-interval))
+
         ;; start timer if not started yet
-        (setq counsel-etags-timer (current-time)))
-
-       ((< (- (float-time (current-time)) (float-time counsel-etags-timer))
-           counsel-etags-update-interval)
-        ;; do nothing, can't run ctags too often
-        )
-
-       (t
         (setq counsel-etags-timer (current-time))
+
+        ;; start updating
+        (if counsel-etags-debug (message "counsel-etags-virtual-update-tags actually happened."))
+
         (let* ((dir (file-name-directory (file-truename (counsel-etags-locate-tags-file)))))
           (if counsel-etags-debug (message "update tags in %s" dir))
-          (funcall counsel-etags-update-tags-backend dir)))))))
+          (funcall counsel-etags-update-tags-backend dir)))
+
+       (t
+        ;; do nothing, can't run ctags too often
+        (if counsel-etags-debug (message "counsel-etags-virtual-update-tags is actually skipped.")))))))
 
 (defun counsel-etags-unquote-regex-parens (str)
   "Unquote regexp parentheses in STR."
@@ -1591,6 +1598,11 @@ If SYMBOL-AT-POINT is nil, don't read symbol at point."
   "Test if ripgrep program exist."
   (or counsel-etags-use-ripgrep-force (executable-find "rg")))
 
+(defun counsel-etags-shell-quote (argument)
+  "Quote ARGUMENT."
+  (if (eq system-type 'windows-nt) argument
+    (shell-quote-argument argument)))
+
 (defun counsel-etags-exclude-opts (use-cache)
   "Grep CLI options.  IF USE-CACHE is t, the options is read from cache."
   (let* ((ignore-dirs (if use-cache (plist-get counsel-etags-opts-cache :ignore-dirs)
@@ -1601,19 +1613,19 @@ If SYMBOL-AT-POINT is nil, don't read symbol at point."
     (cond
      ((counsel-etags-has-quick-grep-p)
       (concat (mapconcat (lambda (e)
-                           (format "-g=\"!%s/*\"" (shell-quote-argument e)))
+                           (format "-g=\"!%s/*\"" (counsel-etags-shell-quote e)))
                          ignore-dirs " ")
               " "
               (mapconcat (lambda (e)
-                           (format "-g=\"!%s\"" (shell-quote-argument e)))
+                           (format "-g=\"!%s\"" (counsel-etags-shell-quote e)))
                          ignore-file-names " ")))
      (t
       (concat (mapconcat (lambda (e)
-                           (format "--exclude-dir=\"%s\"" (shell-quote-argument e)))
+                           (format "--exclude-dir=\"%s\"" (counsel-etags-shell-quote e)))
                          ignore-dirs " ")
               " "
               (mapconcat (lambda (e)
-                           (format "--exclude=\"%s\"" (shell-quote-argument e)))
+                           (format "--exclude=\"%s\"" (counsel-etags-shell-quote e)))
                          ignore-file-names " "))))))
 
 (defun counsel-etags-grep-cli (keyword use-cache)

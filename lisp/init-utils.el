@@ -522,21 +522,37 @@ Copied from 3rd party package evil-textobj."
    (t
     (run-with-idle-timer seconds nil func))))
 
+(defun my-imenu-item-position (item)
+  "Handle some strange imenu ITEM."
+  (if (markerp item) (marker-position item) item))
+
 (defun my-get-closest-imenu-item (cands)
-  "Return closest imen item from CANDS."
+  "Return closest imenu item from CANDS."
   (let* ((pos (point))
          closest)
     (dolist (c cands)
       (let* ((item (cdr c))
              (m (cdr item)))
-        (when (and m (<= (marker-position m) pos))
+        (when (and m (<= (my-imenu-item-position m) pos))
           (cond
            ((not closest)
             (setq closest item))
-           ((< (- pos (marker-position m))
-               (- pos (marker-position (cdr closest))))
+           ((< (- pos (my-imenu-item-position m))
+               (- pos (my-imenu-item-position (cdr closest))))
             (setq closest item))))))
     closest))
+
+(defun my-setup-extra-keymap (extra-fn-list hint fn &rest args)
+  "Map EXTRA-FN-LIST to new keymap and show HINT after calling FN with ARGS."
+  (let ((echo-keystrokes nil))
+    (apply fn args)
+    (message hint)
+    (set-transient-map
+     (let ((map (make-sparse-keymap)))
+       (dolist (item extra-fn-list)
+         (define-key map (kbd (nth 0 item)) (nth 1 item)))
+       map)
+     t)))
 
 (provide 'init-utils)
 ;;; init-utils.el ends here

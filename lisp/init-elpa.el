@@ -33,6 +33,7 @@
   '(ace-window ; latest stable is released on year 2014
     ace-pinyin
     pos-tip
+    web-mode
     racket-mode
     auto-package-update
     nov
@@ -229,6 +230,7 @@ You still need modify `package-archives' in \"init-elpa.el\" to PERMANENTLY use 
 ;; On-demand installation of packages
 (defun require-package (package &optional min-version no-refresh)
   "Ask elpa to install given PACKAGE."
+  (my-ensure 'package)
   (cond
    ((package-installed-p package min-version)
     t)
@@ -364,6 +366,7 @@ You still need modify `package-archives' in \"init-elpa.el\" to PERMANENTLY use 
 (require-package 'pdf-tools)
 (require-package 'pyim)
 (require-package 'pyim-wbdict) ; someone may use wubi IME, not me
+(require-package 'pyim-basedict)
 (require-package 'esup)
 
 ;; {{ Fixed expiring GNU ELPA keys
