@@ -305,6 +305,17 @@ If USER-SELECT-BRANCH is not nil, rebase on the tag or branch selected by user."
       (magit-rebase-interactive based nil))))
 ;; }}
 
+(defun my-git-cherry-pick-from-reflog ()
+  "Cherry pick a commit from git reflog."
+  (interactive)
+  (let* ((cmd "git --no-pager reflog --date=short")
+         (lines (my-lines-from-command-output cmd))
+         (selected (completing-read "Commit to cherry pick:" lines))
+         (commit-id (and selected (car (split-string selected)))))
+    (when commit-id
+      (my-ensure 'magit)
+      (magit-cherry-copy commit-id))))
+
 ;; {{ git-gutter use ivy
 (defun my-reshape-git-gutter (gutter)
   "Re-shape gutter for `ivy-read'."
@@ -388,5 +399,31 @@ If nothing is selected, use the word under cursor as function name to look up."
 
       (my-ensure 'find-file-in-project)
       (ffip-show-content-in-diff-mode (shell-command-to-string cmd)))))
+
+
+(defun my-hint-untracked-files ()
+  "If untracked files and commited files share same extension, warn users."
+  (let* ((exts (mapcar 'file-name-extension (my-lines-from-command-output "git diff-tree --no-commit-id --name-only -r HEAD")))
+         (untracked-files (my-lines-from-command-output "git --no-pager ls-files --others --exclude-standard"))
+         (lookup-ext (make-hash-table :test #'equal))
+         rlt)
+    ;; file extensions of files in HEAD commit
+    (dolist (ext exts)
+      (puthash ext t lookup-ext))
+    ;; If untracked file has same file extension as committed files
+    ;; maybe they should be staged too?
+    (dolist (file untracked-files)
+      (when (gethash (file-name-extension file) lookup-ext)
+        (push (file-name-nondirectory file) rlt)))
+    (when rlt
+      (message "Stage files? %s" (mapconcat 'identity rlt " ")))))
+
+(with-eval-after-load 'magit
+  (defun my-git-check-status ()
+    "Check git repo status."
+    ;; use timer here to wait magit cool down
+    (my-run-with-idle-timer 1 #'my-hint-untracked-files))
+  (add-hook 'magit-post-commit-hook #'my-git-check-status)
+  (add-hook 'git-commit-post-finish-hook #'my-git-check-status))
 
 (provide 'init-git)
