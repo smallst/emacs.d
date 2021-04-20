@@ -31,10 +31,6 @@
       undo-strong-limit 8000000
       undo-outer-limit 8000000)
 
-(defvar my-use-m-for-matchit nil
-  "If t, use \"m\" key for `evil-matchit-mode'.
-And \"%\" key is also restored to `evil-jump-item'.")
-
 ;; {{ @see https://github.com/timcharper/evil-surround for tutorial
 (my-run-with-idle-timer 2 #'global-evil-surround-mode)
 (with-eval-after-load 'evil-surround
@@ -54,7 +50,8 @@ And \"%\" key is also restored to `evil-jump-item'.")
       (push '(?\( . ("( " . ")")) evil-surround-pairs-alist)
       (push '(?` . ("`" . "'")) evil-surround-pairs-alist))
 
-    (when (derived-mode-p 'js-mode)
+    (when (or (derived-mode-p 'js-mode)
+              (memq major-mode '(typescript-mode web-mode)))
       (push '(?j . ("JSON.stringify(" . ")")) evil-surround-pairs-alist)
       (push '(?> . ("(e) => " . "(e)")) evil-surround-pairs-alist))
 
@@ -634,7 +631,7 @@ If N > 0, only occurrences in current N lines are renamed."
   "sd" 'split-window-horizontally
   "oo" 'delete-other-windows
   ;; }}
-  "xr" 'rotate-windows
+  "xr" 'my-rotate-windows
   "xt" 'toggle-two-split-window
   "uu" 'my-transient-winner-undo
   "fs" 'ffip-save-ivy-last
