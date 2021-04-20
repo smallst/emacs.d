@@ -49,7 +49,7 @@
     undo-fu
     command-log-mode
     evil ; @see https://github.com/emacs-evil/evil/commit/19cc5f8eef8bfffdec8082b604c7129782acb332
-    ;; lsp-mode ; stable version has performance issue, but unstable version sends too many warnings
+    lsp-mode ; stable version has performance issue, but unstable version sends too many warnings
     vimrc-mode
     rjsx-mode ; fixed the indent issue in jsx
     package-lint ; for melpa pull request only
@@ -123,6 +123,7 @@
     session
     flymake-lua
     flymake-rust
+    flymake-cursor
     multi-term
     inflections
     lua-mode
@@ -153,12 +154,14 @@
       '(
         ;; uncomment below line if you need use GNU ELPA
         ;; ("gnu" . "https://elpa.gnu.org/packages/")
-        ;; ("melpa" . "https://melpa.org/packages/")
-        ;; ("melpa-stable" . "https://stable.melpa.org/packages/")
+        ("melpa" . "https://melpa.org/packages/")
+        ("melpa-stable" . "https://stable.melpa.org/packages/")
         ;; ("org" . "https://orgmode.org/elpa/")
 
         ;; Use either 163 or tsinghua mirror repository when official melpa
         ;; is slow or shutdown.
+        ;; ("melpa" . "https://mirrors.cloud.tencent.com/elpa/melpa/")
+        ;; ("melpa-stable" . "https://mirrors.cloud.tencent.com/elpa/melpa-stable/")
 
         ;; ;; {{ Option 1: 163 mirror repository:
         ;; ;; ("gnu" . "https://mirrors.163.com/elpa/gnu/")
@@ -169,8 +172,8 @@
         ;; ;; {{ Option 2: tsinghua mirror repository
         ;; ;; @see https://mirror.tuna.tsinghua.edu.cn/help/elpa/ on usage:
         ;; ("gnu"   . "http://mirrors.tuna.tsinghua.edu.cn/elpa/gnu/")
-        ("melpa" .        "https://mirrors.tuna.tsinghua.edu.cn/elpa/melpa/")
-        ("melpa-stable" . "https://mirrors.tuna.tsinghua.edu.cn/elpa/melpa-stable/")
+        ;; ("melpa" .        "https://mirrors.tuna.tsinghua.edu.cn/elpa/melpa/")
+        ;; ("melpa-stable" . "https://mirrors.tuna.tsinghua.edu.cn/elpa/melpa-stable/")
         ("org" .          "https://mirrors.tuna.tsinghua.edu.cn/elpa/org/")
         ;; }}
         ))
